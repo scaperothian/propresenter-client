@@ -111,7 +111,7 @@ class ProPresenterController:
         active = self.get_active_presentation()
         if active['presentation'] is not None:
             return True
-        else:
+        #else:
             #need to activate a presentation be default (i.e. the first one)
 
         # If no presentation is active, try to trigger the first presentation in active playlist
