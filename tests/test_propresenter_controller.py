@@ -3,8 +3,9 @@ Unit tests for ProPresenterController
 """
 
 import pytest
+from pathlib import Path
 from unittest.mock import patch, MagicMock
-from propresenter_slides.main import ProPresenterController, interactive_prompt
+from propresenter_slides.main import ProPresenterController, interactive_prompt, load_config_file
 
 
 class TestProPresenterController:
@@ -286,14 +287,14 @@ class TestProPresenterController:
         )
 
     @patch("propresenter_slides.main.requests.request")
-    def test_activate_first_service_playlist_presentation_success(self, mock_request, controller):
-        """Test successful activation of first Service playlist presentation"""
+    def test_activate_first_playlist_presentation_success(self, mock_request, controller):
+        """Test successful activation of first playlist presentation"""
         mock_response = MagicMock()
         mock_response.text = ""
         mock_response.json.side_effect = ValueError()
         mock_request.return_value = mock_response
 
-        result = controller.activate_first_service_playlist_presentation()
+        result = controller.activate_first_playlist_presentation("Service")
 
         assert result is True
         mock_request.assert_called_once_with(
@@ -301,6 +302,40 @@ class TestProPresenterController:
             "http://localhost:1025/v1/playlist/Service/0/trigger",
             timeout=5
         )
+
+    @patch("propresenter_slides.main.requests.request")
+    def test_get_library_success(self, mock_request, controller):
+        """Test successful retrieval of a named library"""
+        mock_response = MagicMock()
+        mock_response.text = '{"items": [{"uuid": "abc", "name": "Hello World"}]}'
+        mock_response.json.return_value = {"items": [{"uuid": "abc", "name": "Hello World"}]}
+        mock_request.return_value = mock_response
+
+        result = controller.get_library("Default")
+
+        assert result == {"items": [{"uuid": "abc", "name": "Hello World"}]}
+        mock_request.assert_called_once_with(
+            "GET",
+            "http://localhost:1025/v1/library/Default",
+            timeout=5
+        )
+
+    def test_load_config_file_reads_yaml(self, tmp_path):
+        """Test that YAML config values load from presentation.config"""
+        config_file = tmp_path / "presentation.config"
+        config_file.write_text(
+            "host: config.local\nport: 1234\nlibrary: MyLibrary\nplaylist: MyPlaylist\nlog-level: INFO\n"
+        )
+
+        config = load_config_file(config_file)
+
+        assert config == {
+            "host": "config.local",
+            "port": 1234,
+            "library": "MyLibrary",
+            "playlist": "MyPlaylist",
+            "log-level": "INFO"
+        }
 
     @patch("propresenter_slides.main.requests.request")
     def test_ensure_presentation_active_already_active(self, mock_request, controller):

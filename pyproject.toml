@@ -38,6 +38,7 @@ packages = ["propresenter_slides"]
 
 [tool.poetry.dependencies]
 requests = "^2.33.1"
+PyYAML = "^6.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.0"

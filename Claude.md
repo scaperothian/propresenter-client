@@ -34,8 +34,11 @@
 - `--host` - ProPresenter host/IP address (default: localhost)
 - `--port` - ProPresenter port (default: 1025)
 - `--timeout` - Request timeout in seconds (default: 5)
-- `--presentation` - Presentation title to activate from Default library before interactive mode
+- `--library` - Library name to use for presentation lookup
+- `--playlist` - Playlist name to use for default activation
+- `--presentation` - Presentation title to activate from configured library before interactive mode
 - `--log-level` - Set logging verbosity for request diagnostics (default: WARNING)
+- `--config-file` - Path to YAML config file with default values (default: presentation.config)
 
 ### CLI Commands
 - `n` - Next slide

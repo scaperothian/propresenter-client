@@ -6,9 +6,27 @@ import argparse
 import logging
 import requests
 import sys
+from pathlib import Path
 from typing import Optional
 
+import yaml
+
 logger = logging.getLogger(__name__)
+
+
+def load_config_file(config_path: Path = Path("presentation.config")) -> dict:
+    """Load YAML configuration from a presentation.config file."""
+    if not config_path.is_file():
+        return {}
+
+    try:
+        config = yaml.safe_load(config_path.read_text()) or {}
+        if not isinstance(config, dict):
+            raise ValueError("Config file must contain a mapping of values")
+        return config
+    except Exception as e:
+        print(f"Warning: Could not load config file {config_path}: {e}")
+        return {}
 
 
 class ProPresenterController:
@@ -156,6 +174,18 @@ class ProPresenterController:
         """
         return self._request("GET", "v1/playlist/active")
 
+    def get_library(self, library_name: str) -> Optional[dict]:
+        """
+        Get a named library's contents.
+
+        Args:
+            library_name: The library name to query
+
+        Returns:
+            Library data if available, None if request fails
+        """
+        return self._request("GET", f"v1/library/{library_name}")
+
     def get_library_default(self) -> Optional[dict]:
         """
         Get the Default library contents.
@@ -163,7 +193,7 @@ class ProPresenterController:
         Returns:
             Library data if available, None if request fails
         """
-        return self._request("GET", "v1/library/Default")
+        return self.get_library("Default")
 
     def find_presentation_uuid_by_name(
         self, presentation_name: str, library_data: Optional[dict]
@@ -232,6 +262,19 @@ class ProPresenterController:
         result = self._request("GET", f"v1/presentation/{uuid}/trigger")
         return result is not None
 
+    def activate_first_playlist_presentation(self, playlist_name: str) -> bool:
+        """
+        Activate the first presentation in the provided playlist.
+
+        Args:
+            playlist_name: The playlist name to activate the first presentation from
+
+        Returns:
+            True if activation request succeeded, False otherwise
+        """
+        result = self._request("GET", f"v1/playlist/{playlist_name}/0/trigger")
+        return result is not None
+
     def activate_first_service_playlist_presentation(self) -> bool:
         """
         Activate the first presentation in the Service playlist.
@@ -239,8 +282,7 @@ class ProPresenterController:
         Returns:
             True if activation request succeeded, False otherwise
         """
-        result = self._request("GET", "v1/playlist/Service/0/trigger")
-        return result is not None
+        return self.activate_first_playlist_presentation("Service")
 
     def ensure_presentation_active(self) -> bool:
         """
@@ -337,20 +379,38 @@ def interactive_prompt(controller: ProPresenterController) -> None:
 
 def main() -> None:
     """Main entry point for the CLI."""
-    parser = argparse.ArgumentParser(
-        description="Control ProPresenter presentations from the command line"
+    config_parser = argparse.ArgumentParser(add_help=False)
+    config_parser.add_argument(
+        "--config-file",
+        type=str,
+        default="presentation.config",
+        help="Path to a YAML config file with default values"
     )
+
+    config_args, remaining_args = config_parser.parse_known_args()
+    config = load_config_file(Path(config_args.config_file))
+
+    parser = argparse.ArgumentParser(
+        description="Control ProPresenter presentations from the command line",
+        parents=[config_parser]
+    )
+    parser.set_defaults(
+        host=config.get("host", "localhost"),
+        port=config.get("port", 1025),
+        library=config.get("library", "Default"),
+        playlist=config.get("playlist", "Service"),
+        log_level=config.get("log-level", "WARNING")
+    )
+
     parser.add_argument(
         "--host",
         type=str,
-        default="localhost",
-        help="ProPresenter host/IP address (default: localhost)"
+        help="ProPresenter host/IP address"
     )
     parser.add_argument(
         "--port",
         type=int,
-        default=1025,
-        help="ProPresenter port (default: 1025)"
+        help="ProPresenter port"
     )
     parser.add_argument(
         "--timeout",
@@ -359,19 +419,28 @@ def main() -> None:
         help="Request timeout in seconds (default: 5)"
     )
     parser.add_argument(
+        "--library",
+        type=str,
+        help="Library name to use for presentation lookup"
+    )
+    parser.add_argument(
+        "--playlist",
+        type=str,
+        help="Playlist name to use for default presentation activation"
+    )
+    parser.add_argument(
         "--presentation",
         type=str,
-        help="Presentation title to activate from the Default library before entering interactive mode"
+        help="Presentation title to activate from the configured library before entering interactive mode"
     )
     parser.add_argument(
         "--log-level",
         type=str,
         choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
-        default="WARNING",
-        help="Set logging verbosity for request diagnostics (default: WARNING)"
+        help="Set logging verbosity for request diagnostics"
     )
 
-    args = parser.parse_args()
+    args = parser.parse_args(remaining_args)
 
     logging.basicConfig(
         level=getattr(logging, args.log_level),
@@ -393,14 +462,14 @@ def main() -> None:
     print(f"Connected to ProPresenter at {args.host}:{args.port}")
 
     if args.presentation:
-        library = controller.get_library_default()
+        library = controller.get_library(args.library)
         if library is None:
-            print(f"Error: Could not query Default library at {args.host}:{args.port}")
+            print(f"Error: Could not query {args.library} library at {args.host}:{args.port}")
             sys.exit(1)
 
         presentation_uuid = controller.find_presentation_uuid_by_name(args.presentation, library)
         if presentation_uuid is None:
-            print(f"Error: Presentation '{args.presentation}' not found in Default library")
+            print(f"Error: Presentation '{args.presentation}' not found in {args.library} library")
             sys.exit(1)
 
         if controller.activate_presentation(presentation_uuid):
@@ -409,11 +478,11 @@ def main() -> None:
             print(f"Error: Failed to activate presentation UUID {presentation_uuid}")
             sys.exit(1)
     else:
-        # Default behavior: activate first presentation in Service playlist
-        if controller.activate_first_service_playlist_presentation():
-            print("Activated first presentation in Service playlist")
+        # Default behavior: activate first presentation in configured playlist
+        if controller.activate_first_playlist_presentation(args.playlist):
+            print(f"Activated first presentation in {args.playlist} playlist")
         else:
-            print("Warning: Could not activate first presentation in Service playlist")
+            print(f"Warning: Could not activate first presentation in {args.playlist} playlist")
 
     interactive_prompt(controller)
 
