@@ -44,7 +44,7 @@ controller = ProPresenterController(host="localhost", port=1025)
 # Control slides
 controller.next_slide()
 controller.previous_slide()
-controller.go_to_slide(0)  # Go to first slide (0-indexed)
+controller.go_to_slide(1)  # Go to first slide (1-indexed)
 
 # Activate specific presentation by UUID
 controller.activate_presentation("92B5E6E2-5E99-4F54-BAD3-6FBD7D2EE675")
@@ -63,10 +63,16 @@ propresenter-slides --host=192.168.1.100
 propresenter-slides --host=192.168.1.100 --presentation="Amazing Grace"
 ```
 
+You can also enable request diagnostics with logging:
+
+```bash
+propresenter-slides --host=192.168.1.100 --log-level=DEBUG
+```
+
 Then use:
 - `n` - Next slide
 - `b` - Back to previous slide
-- `0`, `1`, `2`, etc. - Go to specific slide (0-indexed)
+- `1`, `2`, `3`, etc. - Go to specific slide (1-indexed)
 - `q` - Quit
 
 ### Default Behavior
