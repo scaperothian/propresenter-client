@@ -185,7 +185,7 @@ class TestProPresenterController:
         )
 
     def test_find_presentation_uuid_by_name(self, controller):
-        """Test song lookup in Default library response"""
+        """Test presentation lookup in Default library response"""
         library_data = {
             "items": [
                 {"uuid": "123", "name": "The Great Song"},
@@ -198,7 +198,7 @@ class TestProPresenterController:
         assert result == "123"
 
     def test_find_presentation_uuid_by_name_returns_none(self, controller):
-        """Test missing song lookup returns None"""
+        """Test missing presentation lookup returns None"""
         library_data = {
             "items": [
                 {"uuid": "123", "name": "The Great Song"}

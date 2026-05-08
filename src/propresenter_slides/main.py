@@ -113,15 +113,15 @@ class ProPresenterController:
         return self._request("GET", "v1/library/Default")
 
     def find_presentation_uuid_by_name(
-        self, song_name: str, library_data: Optional[dict]
+        self, presentation_name: str, library_data: Optional[dict]
     ) -> Optional[str]:
         """
-        Find a presentation UUID in the Default library by song name.
+        Find a presentation UUID in the Default library by presentation name.
 
         Uses case-insensitive substring matching on common title fields.
 
         Args:
-            song_name: The song/presentation name to search for
+            presentation_name: The presentation name to search for
             library_data: The library response payload
 
         Returns:
@@ -141,7 +141,7 @@ class ProPresenterController:
         elif isinstance(library_data, list):
             items = library_data
 
-        search = song_name.strip().lower()
+        search = presentation_name.strip().lower()
 
         for entry in items:
             if not isinstance(entry, dict):
@@ -285,9 +285,9 @@ def main() -> None:
         help="Request timeout in seconds (default: 5)"
     )
     parser.add_argument(
-        "--song",
+        "--presentation",
         type=str,
-        help="Song title to activate from the Default library before entering interactive mode"
+        help="Presentation title to activate from the Default library before entering interactive mode"
     )
 
     args = parser.parse_args()
@@ -306,21 +306,21 @@ def main() -> None:
 
     print(f"Connected to ProPresenter at {args.host}:{args.port}")
 
-    if args.song:
+    if args.presentation:
         library = controller.get_library_default()
         if library is None:
             print(f"Error: Could not query Default library at {args.host}:{args.port}")
             sys.exit(1)
 
-        song_uuid = controller.find_presentation_uuid_by_name(args.song, library)
-        if song_uuid is None:
-            print(f"Error: Song '{args.song}' not found in Default library")
+        presentation_uuid = controller.find_presentation_uuid_by_name(args.presentation, library)
+        if presentation_uuid is None:
+            print(f"Error: Presentation '{args.presentation}' not found in Default library")
             sys.exit(1)
 
-        if controller.activate_presentation(song_uuid):
-            print(f"Activated '{args.song}' (UUID: {song_uuid})")
+        if controller.activate_presentation(presentation_uuid):
+            print(f"Activated '{args.presentation}' (UUID: {presentation_uuid})")
         else:
-            print(f"Error: Failed to activate presentation UUID {song_uuid}")
+            print(f"Error: Failed to activate presentation UUID {presentation_uuid}")
             sys.exit(1)
     else:
         # Default behavior: activate first presentation in Service playlist

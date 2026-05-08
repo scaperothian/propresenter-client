@@ -59,8 +59,8 @@ controller.activate_first_service_playlist_presentation()
 # Default behavior: activates first presentation in Service playlist
 propresenter-slides --host=192.168.1.100
 
-# Activate specific song by name before entering interactive mode
-propresenter-slides --host=192.168.1.100 --song="Amazing Grace"
+# Activate specific presentation by name before entering interactive mode
+propresenter-slides --host=192.168.1.100 --presentation="Amazing Grace"
 ```
 
 Then use:
@@ -71,9 +71,9 @@ Then use:
 
 ### Default Behavior
 
-When no `--song` argument is provided, the tool automatically activates the first presentation in the Service playlist (`GET /v1/playlist/Service/0/trigger`).
+When no `--presentation` argument is provided, the tool automatically activates the first presentation in the Service playlist (`GET /v1/playlist/Service/0/trigger`).
 
-When `--song` is specified, it searches the Default library for a matching presentation name and activates it before entering interactive mode.
+When `--presentation` is specified, it searches the Default library for a matching presentation name and activates it before entering interactive mode.
 
 ## Testing
 
