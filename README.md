@@ -81,6 +81,9 @@ propresenter-slides --host=192.168.1.100
 
 # Activate specific presentation by name before entering interactive mode
 propresenter-slides --host=192.168.1.100 --presentation="Amazing Grace"
+
+# Use a different library and playlist
+propresenter-slides --host=192.168.1.100 --library="Worship" --playlist="Sunday"
 ```
 
 You can also enable request diagnostics with logging:

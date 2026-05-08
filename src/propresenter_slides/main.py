@@ -6,27 +6,9 @@ import argparse
 import logging
 import requests
 import sys
-from pathlib import Path
 from typing import Optional
 
-import yaml
-
 logger = logging.getLogger(__name__)
-
-
-def load_config_file(config_path: Path = Path("presentation.config")) -> dict:
-    """Load YAML configuration from a presentation.config file."""
-    if not config_path.is_file():
-        return {}
-
-    try:
-        config = yaml.safe_load(config_path.read_text()) or {}
-        if not isinstance(config, dict):
-            raise ValueError("Config file must contain a mapping of values")
-        return config
-    except Exception as e:
-        print(f"Warning: Could not load config file {config_path}: {e}")
-        return {}
 
 
 class ProPresenterController:
@@ -379,38 +361,20 @@ def interactive_prompt(controller: ProPresenterController) -> None:
 
 def main() -> None:
     """Main entry point for the CLI."""
-    config_parser = argparse.ArgumentParser(add_help=False)
-    config_parser.add_argument(
-        "--config-file",
-        type=str,
-        default="presentation.config",
-        help="Path to a YAML config file with default values"
-    )
-
-    config_args, remaining_args = config_parser.parse_known_args()
-    config = load_config_file(Path(config_args.config_file))
-
     parser = argparse.ArgumentParser(
-        description="Control ProPresenter presentations from the command line",
-        parents=[config_parser]
+        description="Control ProPresenter presentations from the command line"
     )
-    parser.set_defaults(
-        host=config.get("host", "localhost"),
-        port=config.get("port", 1025),
-        library=config.get("library", "Default"),
-        playlist=config.get("playlist", "Service"),
-        log_level=config.get("log-level", "WARNING")
-    )
-
     parser.add_argument(
         "--host",
         type=str,
-        help="ProPresenter host/IP address"
+        default="localhost",
+        help="ProPresenter host/IP address (default: localhost)"
     )
     parser.add_argument(
         "--port",
         type=int,
-        help="ProPresenter port"
+        default=1025,
+        help="ProPresenter port (default: 1025)"
     )
     parser.add_argument(
         "--timeout",
@@ -421,12 +385,14 @@ def main() -> None:
     parser.add_argument(
         "--library",
         type=str,
-        help="Library name to use for presentation lookup"
+        default="Default",
+        help="Library name to use for presentation lookup (default: Default)"
     )
     parser.add_argument(
         "--playlist",
         type=str,
-        help="Playlist name to use for default presentation activation"
+        default="Service",
+        help="Playlist name to use for default presentation activation (default: Service)"
     )
     parser.add_argument(
         "--presentation",
@@ -437,10 +403,11 @@ def main() -> None:
         "--log-level",
         type=str,
         choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
-        help="Set logging verbosity for request diagnostics"
+        default="WARNING",
+        help="Set logging verbosity for request diagnostics (default: WARNING)"
     )
 
-    args = parser.parse_args(remaining_args)
+    args = parser.parse_args()
 
     logging.basicConfig(
         level=getattr(logging, args.log_level),

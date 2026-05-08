@@ -34,11 +34,10 @@
 - `--host` - ProPresenter host/IP address (default: localhost)
 - `--port` - ProPresenter port (default: 1025)
 - `--timeout` - Request timeout in seconds (default: 5)
-- `--library` - Library name to use for presentation lookup
-- `--playlist` - Playlist name to use for default activation
+- `--library` - Library name to use for presentation lookup (default: Default)
+- `--playlist` - Playlist name to use for default presentation activation (default: Service)
 - `--presentation` - Presentation title to activate from configured library before interactive mode
 - `--log-level` - Set logging verbosity for request diagnostics (default: WARNING)
-- `--config-file` - Path to YAML config file with default values (default: presentation.config)
 
 ### CLI Commands
 - `n` - Next slide
@@ -96,7 +95,8 @@ poetry run pytest --cov=propresenter_slides
 - Base API URL: `http://{host}:{port}` (endpoints start with v1/)
 - Defaults: localhost:1025 with 5-second timeout
 - Connection verified on startup before entering interactive mode
-- Default behavior: activates first presentation in Service playlist (`GET v1/playlist/Service/0/trigger`)
-- `--presentation` option: searches Default library for matching presentation name, then activates it
+- Default behavior: activates first presentation in configured playlist
+- `--library` option: searches specified library for matching presentation name, then activates it (default: Default)
+- `--playlist` option: activates first presentation in specified playlist (default: Service)
 - `go_to_slide` uses 1-indexed slide numbers for presentation navigation
 - All slide control requests use GET method with /trigger endpoints

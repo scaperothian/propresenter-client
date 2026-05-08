@@ -3,9 +3,8 @@ Unit tests for ProPresenterController
 """
 
 import pytest
-from pathlib import Path
 from unittest.mock import patch, MagicMock
-from propresenter_slides.main import ProPresenterController, interactive_prompt, load_config_file
+from propresenter_slides.main import ProPresenterController, interactive_prompt
 
 
 class TestProPresenterController:
@@ -319,23 +318,6 @@ class TestProPresenterController:
             "http://localhost:1025/v1/library/Default",
             timeout=5
         )
-
-    def test_load_config_file_reads_yaml(self, tmp_path):
-        """Test that YAML config values load from presentation.config"""
-        config_file = tmp_path / "presentation.config"
-        config_file.write_text(
-            "host: config.local\nport: 1234\nlibrary: MyLibrary\nplaylist: MyPlaylist\nlog-level: INFO\n"
-        )
-
-        config = load_config_file(config_file)
-
-        assert config == {
-            "host": "config.local",
-            "port": 1234,
-            "library": "MyLibrary",
-            "playlist": "MyPlaylist",
-            "log-level": "INFO"
-        }
 
     @patch("propresenter_slides.main.requests.request")
     def test_ensure_presentation_active_already_active(self, mock_request, controller):
