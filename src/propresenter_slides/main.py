@@ -179,6 +179,16 @@ class ProPresenterController:
         result = self._request("GET", f"v1/presentation/{uuid}/trigger")
         return result is not None
 
+    def activate_first_service_playlist_presentation(self) -> bool:
+        """
+        Activate the first presentation in the Service playlist.
+
+        Returns:
+            True if activation request succeeded, False otherwise
+        """
+        result = self._request("GET", "v1/playlist/Service/0/trigger")
+        return result is not None
+
     def ensure_presentation_active(self) -> bool:
         """
         Ensure a presentation is active. If none is active, activate the first presentation
@@ -312,12 +322,12 @@ def main() -> None:
         else:
             print(f"Error: Failed to activate presentation UUID {song_uuid}")
             sys.exit(1)
-
-    # Ensure a presentation is active
-    if not controller.ensure_presentation_active():
-        print("Warning: Could not activate a presentation")
     else:
-        print("Presentation is active")
+        # Default behavior: activate first presentation in Service playlist
+        if controller.activate_first_service_playlist_presentation():
+            print("Activated first presentation in Service playlist")
+        else:
+            print("Warning: Could not activate first presentation in Service playlist")
 
     interactive_prompt(controller)
 

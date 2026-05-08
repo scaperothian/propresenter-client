@@ -45,12 +45,22 @@ controller = ProPresenterController(host="localhost", port=1025)
 controller.next_slide()
 controller.previous_slide()
 controller.go_to_slide(0)  # Go to first slide (0-indexed)
+
+# Activate specific presentation by UUID
+controller.activate_presentation("92B5E6E2-5E99-4F54-BAD3-6FBD7D2EE675")
+
+# Activate first presentation in Service playlist
+controller.activate_first_service_playlist_presentation()
 ```
 
 ## Interactive Mode
 
 ```bash
+# Default behavior: activates first presentation in Service playlist
 propresenter-slides --host=192.168.1.100
+
+# Activate specific song by name before entering interactive mode
+propresenter-slides --host=192.168.1.100 --song="Amazing Grace"
 ```
 
 Then use:
@@ -58,6 +68,12 @@ Then use:
 - `b` - Back to previous slide
 - `0`, `1`, `2`, etc. - Go to specific slide (0-indexed)
 - `q` - Quit
+
+### Default Behavior
+
+When no `--song` argument is provided, the tool automatically activates the first presentation in the Service playlist (`GET /v1/playlist/Service/0/trigger`).
+
+When `--song` is specified, it searches the Default library for a matching presentation name and activates it before entering interactive mode.
 
 ## Testing
 
