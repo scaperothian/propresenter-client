@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-**propresenter-slides** is a Python CLI tool that provides remote control interface for ProPresenter presentations via its REST APIs. It can activate presentations by name from the Default library or automatically activate the first presentation in the Service playlist.
+**propresenter-slides** is a Python CLI tool that provides remote control interface for ProPresenter presentations via its REST APIs. It can activate presentations by name from the Default library or automatically activate the first presentation in a configured library.
 
 ## Key Structure
 
@@ -23,14 +23,11 @@
 - `get_status()` - Fetch current slide status (GET v1/status/slide)
 - `get_slide_position()` - Get current slide position and total slide count
 - `get_active_presentation()` - Get currently active presentation details
-- `get_active_playlist()` - Get currently active playlist details
 - `get_library(library_name)` - Get a named library's contents
 - `get_library_default()` - Get Default library contents (GET v1/library/Default)
 - `find_presentation_uuid_by_name(presentation_name, library_data)` - Find presentation UUID by name in library
 - `activate_presentation(uuid)` - Activate presentation by UUID (GET v1/presentation/{uuid}/trigger)
 - `activate_first_library_presentation(library_name)` - Activate first presentation in library (GET v1/library/{library}/0/trigger)
-- `activate_first_service_playlist_presentation()` - Activate first presentation in Service playlist (GET v1/playlist/Service/0/trigger)
-- `ensure_presentation_active()` - Ensure a presentation is active (fallback method)
 - `_request()` - Generic HTTP request handler
 
 ### CLI Arguments
