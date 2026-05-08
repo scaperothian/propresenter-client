@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-**propresenter-slides** is a Python CLI tool that provides remote control interface for ProPresenter presentations via its REST APIs.
+**propresenter-slides** is a Python CLI tool that provides remote control interface for ProPresenter presentations via its REST APIs. It can activate presentations by name from the Default library or automatically activate the first presentation in the Service playlist.
 
 ## Key Structure
 
@@ -23,8 +23,18 @@
 - `get_status()` - Fetch current slide status (GET v1/status/slide)
 - `get_active_presentation()` - Get currently active presentation details
 - `get_active_playlist()` - Get currently active playlist details
-- `ensure_presentation_active()` - Ensure a presentation is active (activates first in playlist if needed)
+- `get_library_default()` - Get Default library contents (GET v1/library/Default)
+- `find_presentation_uuid_by_name(song_name, library_data)` - Find presentation UUID by name in library
+- `activate_presentation(uuid)` - Activate presentation by UUID (GET v1/presentation/{uuid}/trigger)
+- `activate_first_service_playlist_presentation()` - Activate first presentation in Service playlist (GET v1/playlist/Service/0/trigger)
+- `ensure_presentation_active()` - Ensure a presentation is active (fallback method)
 - `_request()` - Generic HTTP request handler
+
+### CLI Arguments
+- `--host` - ProPresenter host/IP address (default: localhost)
+- `--port` - ProPresenter port (default: 1025)
+- `--timeout` - Request timeout in seconds (default: 5)
+- `--song` - Song title to activate from Default library before interactive mode
 
 ### CLI Commands
 - `n` - Next slide
@@ -39,6 +49,12 @@
 2. Use `self._request()` for HTTP calls
 3. Return boolean for success or dict for data
 4. Add corresponding command to `interactive_prompt()` if user-facing
+
+### Adding Song/Presentation Activation
+1. Add method to query library: `GET v1/library/{library_name}`
+2. Add method to find presentation by name in library response
+3. Add method to activate presentation: `GET v1/presentation/{uuid}/trigger`
+4. Add CLI argument and logic in `main()` to handle activation before interactive mode
 
 ### Modifying CLI Arguments
 Edit the argparse section in `main()` to add/modify command-line flags.
@@ -76,5 +92,7 @@ poetry run pytest --cov=propresenter_slides
 - Base API URL: `http://{host}:{port}` (endpoints start with v1/)
 - Defaults: localhost:1025 with 5-second timeout
 - Connection verified on startup before entering interactive mode
+- Default behavior: activates first presentation in Service playlist (`GET v1/playlist/Service/0/trigger`)
+- `--song` option: searches Default library for matching presentation name, then activates it
 - API endpoints use 0-indexed slide indices
 - All slide control requests use GET method with /trigger endpoints

@@ -227,6 +227,23 @@ class TestProPresenterController:
         )
 
     @patch("propresenter_slides.main.requests.request")
+    def test_activate_first_service_playlist_presentation_success(self, mock_request, controller):
+        """Test successful activation of first Service playlist presentation"""
+        mock_response = MagicMock()
+        mock_response.text = ""
+        mock_response.json.side_effect = ValueError()
+        mock_request.return_value = mock_response
+
+        result = controller.activate_first_service_playlist_presentation()
+
+        assert result is True
+        mock_request.assert_called_once_with(
+            "GET",
+            "http://localhost:1025/v1/playlist/Service/0/trigger",
+            timeout=5
+        )
+
+    @patch("propresenter_slides.main.requests.request")
     def test_ensure_presentation_active_already_active(self, mock_request, controller):
         """Test ensure_presentation_active when presentation is already active"""
         mock_response = MagicMock()
