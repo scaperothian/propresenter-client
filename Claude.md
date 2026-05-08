@@ -24,7 +24,7 @@
 - `get_active_presentation()` - Get currently active presentation details
 - `get_active_playlist()` - Get currently active playlist details
 - `get_library_default()` - Get Default library contents (GET v1/library/Default)
-- `find_presentation_uuid_by_name(song_name, library_data)` - Find presentation UUID by name in library
+- `find_presentation_uuid_by_name(presentation_name, library_data)` - Find presentation UUID by name in library
 - `activate_presentation(uuid)` - Activate presentation by UUID (GET v1/presentation/{uuid}/trigger)
 - `activate_first_service_playlist_presentation()` - Activate first presentation in Service playlist (GET v1/playlist/Service/0/trigger)
 - `ensure_presentation_active()` - Ensure a presentation is active (fallback method)
@@ -34,7 +34,7 @@
 - `--host` - ProPresenter host/IP address (default: localhost)
 - `--port` - ProPresenter port (default: 1025)
 - `--timeout` - Request timeout in seconds (default: 5)
-- `--song` - Song title to activate from Default library before interactive mode
+- `--presentation` - Presentation title to activate from Default library before interactive mode
 
 ### CLI Commands
 - `n` - Next slide
@@ -50,7 +50,7 @@
 3. Return boolean for success or dict for data
 4. Add corresponding command to `interactive_prompt()` if user-facing
 
-### Adding Song/Presentation Activation
+### Adding Presentation Activation
 1. Add method to query library: `GET v1/library/{library_name}`
 2. Add method to find presentation by name in library response
 3. Add method to activate presentation: `GET v1/presentation/{uuid}/trigger`
@@ -93,6 +93,6 @@ poetry run pytest --cov=propresenter_slides
 - Defaults: localhost:1025 with 5-second timeout
 - Connection verified on startup before entering interactive mode
 - Default behavior: activates first presentation in Service playlist (`GET v1/playlist/Service/0/trigger`)
-- `--song` option: searches Default library for matching presentation name, then activates it
+- `--presentation` option: searches Default library for matching presentation name, then activates it
 - API endpoints use 0-indexed slide indices
 - All slide control requests use GET method with /trigger endpoints
