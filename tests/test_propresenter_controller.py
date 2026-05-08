@@ -168,6 +168,65 @@ class TestProPresenterController:
         )
 
     @patch("propresenter_slides.main.requests.request")
+    def test_get_library_default_success(self, mock_request, controller):
+        """Test successful retrieval of Default library contents"""
+        mock_response = MagicMock()
+        mock_response.text = '{"items": [{"uuid": "abc", "name": "Hello World"}]}'
+        mock_response.json.return_value = {"items": [{"uuid": "abc", "name": "Hello World"}]}
+        mock_request.return_value = mock_response
+
+        result = controller.get_library_default()
+
+        assert result == {"items": [{"uuid": "abc", "name": "Hello World"}]}
+        mock_request.assert_called_once_with(
+            "GET",
+            "http://localhost:1025/v1/library/Default",
+            timeout=5
+        )
+
+    def test_find_presentation_uuid_by_name(self, controller):
+        """Test song lookup in Default library response"""
+        library_data = {
+            "items": [
+                {"uuid": "123", "name": "The Great Song"},
+                {"uuid": "456", "name": "Another Track"}
+            ]
+        }
+
+        result = controller.find_presentation_uuid_by_name("great", library_data)
+
+        assert result == "123"
+
+    def test_find_presentation_uuid_by_name_returns_none(self, controller):
+        """Test missing song lookup returns None"""
+        library_data = {
+            "items": [
+                {"uuid": "123", "name": "The Great Song"}
+            ]
+        }
+
+        result = controller.find_presentation_uuid_by_name("missing", library_data)
+
+        assert result is None
+
+    @patch("propresenter_slides.main.requests.request")
+    def test_activate_presentation_success(self, mock_request, controller):
+        """Test successful presentation activation by UUID"""
+        mock_response = MagicMock()
+        mock_response.text = ""
+        mock_response.json.side_effect = ValueError()
+        mock_request.return_value = mock_response
+
+        result = controller.activate_presentation("123")
+
+        assert result is True
+        mock_request.assert_called_once_with(
+            "GET",
+            "http://localhost:1025/v1/presentation/123/trigger",
+            timeout=5
+        )
+
+    @patch("propresenter_slides.main.requests.request")
     def test_ensure_presentation_active_already_active(self, mock_request, controller):
         """Test ensure_presentation_active when presentation is already active"""
         mock_response = MagicMock()

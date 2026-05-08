@@ -71,11 +71,14 @@ class ProPresenterController:
         Go to a specific slide number.
 
         Args:
-            slide_number: The slide index to navigate to (0-indexed)
+            slide_number: The slide index to navigate to (1-indexed)
 
         Returns:
             True if successful, False otherwise
         """
+        if slide_number <= 0:
+            slide_number = 1  # Ensure slide number is at least 1
+
         result = self._request(
             "GET",
             f"v1/presentation/active/{slide_number}/trigger"
@@ -100,6 +103,82 @@ class ProPresenterController:
         """
         return self._request("GET", "v1/playlist/active")
 
+    def get_library_default(self) -> Optional[dict]:
+        """
+        Get the Default library contents.
+
+        Returns:
+            Library data if available, None if request fails
+        """
+        return self._request("GET", "v1/library/Default")
+
+    def find_presentation_uuid_by_name(
+        self, song_name: str, library_data: Optional[dict]
+    ) -> Optional[str]:
+        """
+        Find a presentation UUID in the Default library by song name.
+
+        Uses case-insensitive substring matching on common title fields.
+
+        Args:
+            song_name: The song/presentation name to search for
+            library_data: The library response payload
+
+        Returns:
+            The matching presentation UUID, or None if not found
+        """
+        if not library_data:
+            return None
+
+        items = []
+        if isinstance(library_data, dict):
+            if "items" in library_data and isinstance(library_data["items"], list):
+                items = library_data["items"]
+            elif "presentations" in library_data and isinstance(library_data["presentations"], list):
+                items = library_data["presentations"]
+            else:
+                items = [library_data]
+        elif isinstance(library_data, list):
+            items = library_data
+
+        search = song_name.strip().lower()
+
+        for entry in items:
+            if not isinstance(entry, dict):
+                continue
+
+            title = (
+                entry.get("name")
+                or entry.get("title")
+                or entry.get("presentationName")
+                or entry.get("presentationTitle")
+                or entry.get("songName")
+            )
+            uuid = (
+                entry.get("uuid")
+                or entry.get("id")
+                or entry.get("presentationId")
+                or entry.get("presentationUUID")
+            )
+
+            if title and uuid and search in title.lower():
+                return uuid
+
+        return None
+
+    def activate_presentation(self, uuid: str) -> bool:
+        """
+        Activate a presentation by UUID.
+
+        Args:
+            uuid: The presentation UUID to activate
+
+        Returns:
+            True if activation request succeeded, False otherwise
+        """
+        result = self._request("GET", f"v1/presentation/{uuid}/trigger")
+        return result is not None
+
     def ensure_presentation_active(self) -> bool:
         """
         Ensure a presentation is active. If none is active, activate the first presentation
@@ -109,19 +188,15 @@ class ProPresenterController:
             True if a presentation is active, False otherwise
         """
         active = self.get_active_presentation()
-        if active['presentation'] is not None:
+        if active and isinstance(active, dict):
             return True
-        #else:
-            #need to activate a presentation be default (i.e. the first one)
 
-        # If no presentation is active, try to trigger the first presentation in active playlist
         playlist = self.get_active_playlist()
-        if playlist and "presentation" in playlist:
-            # Trigger the first presentation in the active playlist
+        if playlist and isinstance(playlist, dict) and "presentation" in playlist:
             result = self._request("GET", "v1/playlist/active/presentation/trigger")
-            return result is not None
+            if result is not None:
+                return True
 
-        # Fallback: try to trigger the focused presentation
         result = self._request("GET", "v1/presentation/focused/trigger")
         return result is not None
 
@@ -199,6 +274,11 @@ def main() -> None:
         default=5,
         help="Request timeout in seconds (default: 5)"
     )
+    parser.add_argument(
+        "--song",
+        type=str,
+        help="Song title to activate from the Default library before entering interactive mode"
+    )
 
     args = parser.parse_args()
 
@@ -215,6 +295,23 @@ def main() -> None:
         sys.exit(1)
 
     print(f"Connected to ProPresenter at {args.host}:{args.port}")
+
+    if args.song:
+        library = controller.get_library_default()
+        if library is None:
+            print(f"Error: Could not query Default library at {args.host}:{args.port}")
+            sys.exit(1)
+
+        song_uuid = controller.find_presentation_uuid_by_name(args.song, library)
+        if song_uuid is None:
+            print(f"Error: Song '{args.song}' not found in Default library")
+            sys.exit(1)
+
+        if controller.activate_presentation(song_uuid):
+            print(f"Activated '{args.song}' (UUID: {song_uuid})")
+        else:
+            print(f"Error: Failed to activate presentation UUID {song_uuid}")
+            sys.exit(1)
 
     # Ensure a presentation is active
     if not controller.ensure_presentation_active():
