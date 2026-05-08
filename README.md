@@ -76,14 +76,14 @@ controller.activate_first_service_playlist_presentation()
 ## Interactive Mode
 
 ```bash
-# Default behavior: activates first presentation in Service playlist
+# Default behavior: activates first presentation in Default library
 propresenter-slides --host=192.168.1.100
 
 # Activate specific presentation by name before entering interactive mode
 propresenter-slides --host=192.168.1.100 --presentation="Amazing Grace"
 
-# Use a different library and playlist
-propresenter-slides --host=192.168.1.100 --library="Worship" --playlist="Sunday"
+# Use a different library
+propresenter-slides --host=192.168.1.100 --library="Worship"
 ```
 
 You can also enable request diagnostics with logging:
@@ -100,7 +100,7 @@ Then use:
 
 ### Default Behavior
 
-When no `--presentation` argument is provided, the tool automatically activates the first presentation in the configured playlist (`GET /v1/playlist/<playlist>/0/trigger`).
+When no `--presentation` argument is provided, the tool automatically activates the first presentation in the configured library (`GET /v1/library/<library>/0/trigger`).
 
 When `--presentation` is specified, it searches the configured library for a matching presentation name and activates it before entering interactive mode.
 

@@ -244,17 +244,17 @@ class ProPresenterController:
         result = self._request("GET", f"v1/presentation/{uuid}/trigger")
         return result is not None
 
-    def activate_first_playlist_presentation(self, playlist_name: str) -> bool:
+    def activate_first_library_presentation(self, library_name: str) -> bool:
         """
-        Activate the first presentation in the provided playlist.
+        Activate the first presentation in the specified library.
 
         Args:
-            playlist_name: The playlist name to activate the first presentation from
+            library_name: The library name to activate the first presentation from
 
         Returns:
             True if activation request succeeded, False otherwise
         """
-        result = self._request("GET", f"v1/playlist/{playlist_name}/0/trigger")
+        result = self._request("GET", f"v1/library/{library_name}/0/trigger")
         return result is not None
 
     def activate_first_service_playlist_presentation(self) -> bool:
@@ -264,7 +264,8 @@ class ProPresenterController:
         Returns:
             True if activation request succeeded, False otherwise
         """
-        return self.activate_first_playlist_presentation("Service")
+        result = self._request("GET", "v1/playlist/Service/0/trigger")
+        return result is not None
 
     def ensure_presentation_active(self) -> bool:
         """
@@ -386,13 +387,7 @@ def main() -> None:
         "--library",
         type=str,
         default="Default",
-        help="Library name to use for presentation lookup (default: Default)"
-    )
-    parser.add_argument(
-        "--playlist",
-        type=str,
-        default="Service",
-        help="Playlist name to use for default presentation activation (default: Service)"
+        help="Library name to use for presentation lookup and default activation (default: Default)"
     )
     parser.add_argument(
         "--presentation",
@@ -445,11 +440,11 @@ def main() -> None:
             print(f"Error: Failed to activate presentation UUID {presentation_uuid}")
             sys.exit(1)
     else:
-        # Default behavior: activate first presentation in configured playlist
-        if controller.activate_first_playlist_presentation(args.playlist):
-            print(f"Activated first presentation in {args.playlist} playlist")
+        # Default behavior: activate first presentation in configured library
+        if controller.activate_first_library_presentation(args.library):
+            print(f"Activated first presentation in {args.library} library")
         else:
-            print(f"Warning: Could not activate first presentation in {args.playlist} playlist")
+            print(f"Warning: Could not activate first presentation in {args.library} library")
 
     interactive_prompt(controller)
 
