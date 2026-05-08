@@ -210,23 +210,6 @@ class TestProPresenterController:
         )
 
     @patch("propresenter_slides.main.requests.request")
-    def test_get_active_playlist_success(self, mock_request, controller):
-        """Test successful retrieval of active playlist"""
-        mock_response = MagicMock()
-        mock_response.text = '{"id": "playlist1", "name": "Main Playlist"}'
-        mock_response.json.return_value = {"id": "playlist1", "name": "Main Playlist"}
-        mock_request.return_value = mock_response
-
-        result = controller.get_active_playlist()
-
-        assert result == {"id": "playlist1", "name": "Main Playlist"}
-        mock_request.assert_called_once_with(
-            "GET",
-            "http://localhost:1025/v1/playlist/active",
-            timeout=5
-        )
-
-    @patch("propresenter_slides.main.requests.request")
     def test_get_library_default_success(self, mock_request, controller):
         """Test successful retrieval of Default library contents"""
         mock_response = MagicMock()
@@ -318,67 +301,3 @@ class TestProPresenterController:
             "http://localhost:1025/v1/library/Default",
             timeout=5
         )
-
-    @patch("propresenter_slides.main.requests.request")
-    def test_ensure_presentation_active_already_active(self, mock_request, controller):
-        """Test ensure_presentation_active when presentation is already active"""
-        mock_response = MagicMock()
-        mock_response.text = '{"uuid": "123", "name": "Presentation 1"}'
-        mock_response.json.return_value = {"uuid": "123", "name": "Presentation 1"}
-        mock_request.return_value = mock_response
-
-        result = controller.ensure_presentation_active()
-
-        assert result is True
-        # Should only call get_active_presentation
-        assert mock_request.call_count == 1
-
-    @patch("propresenter_slides.main.requests.request")
-    def test_ensure_presentation_active_activates_playlist_first(self, mock_request, controller):
-        """Test ensure_presentation_active activates first presentation in active playlist"""
-        # First call (get_active_presentation) returns None
-        mock_response_none = MagicMock()
-        mock_response_none.text = ""
-        mock_response_none.json.side_effect = ValueError()
-
-        # Second call (get_active_playlist) returns playlist with presentation
-        mock_response_playlist = MagicMock()
-        mock_response_playlist.text = '{"presentation": "pres1"}'
-        mock_response_playlist.json.return_value = {"presentation": "pres1"}
-
-        # Third call (trigger first presentation) succeeds
-        mock_response_success = MagicMock()
-        mock_response_success.text = ""
-        mock_response_success.raise_for_status()
-
-        mock_request.side_effect = [mock_response_none, mock_response_playlist, mock_response_success]
-
-        result = controller.ensure_presentation_active()
-
-        assert result is True
-        assert mock_request.call_count == 3
-
-    @patch("propresenter_slides.main.requests.request")
-    def test_ensure_presentation_active_fallback_to_focused(self, mock_request, controller):
-        """Test ensure_presentation_active falls back to focused presentation"""
-        # First call (get_active_presentation) returns None
-        mock_response_none = MagicMock()
-        mock_response_none.text = ""
-        mock_response_none.json.side_effect = ValueError()
-
-        # Second call (get_active_playlist) returns None
-        mock_response_playlist_none = MagicMock()
-        mock_response_playlist_none.text = ""
-        mock_response_playlist_none.json.side_effect = ValueError()
-
-        # Third call (trigger focused presentation) succeeds
-        mock_response_success = MagicMock()
-        mock_response_success.text = ""
-        mock_response_success.raise_for_status()
-
-        mock_request.side_effect = [mock_response_none, mock_response_playlist_none, mock_response_success]
-
-        result = controller.ensure_presentation_active()
-
-        assert result is True
-        assert mock_request.call_count == 3

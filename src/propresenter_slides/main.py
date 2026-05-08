@@ -147,15 +147,6 @@ class ProPresenterController:
         """
         return self._request("GET", "v1/presentation/active")
 
-    def get_active_playlist(self) -> Optional[dict]:
-        """
-        Get the currently active playlist.
-
-        Returns:
-            Playlist details if available, None if request fails
-        """
-        return self._request("GET", "v1/playlist/active")
-
     def get_library(self, library_name: str) -> Optional[dict]:
         """
         Get a named library's contents.
@@ -255,37 +246,6 @@ class ProPresenterController:
             True if activation request succeeded, False otherwise
         """
         result = self._request("GET", f"v1/library/{library_name}/0/trigger")
-        return result is not None
-
-    def activate_first_service_playlist_presentation(self) -> bool:
-        """
-        Activate the first presentation in the Service playlist.
-
-        Returns:
-            True if activation request succeeded, False otherwise
-        """
-        result = self._request("GET", "v1/playlist/Service/0/trigger")
-        return result is not None
-
-    def ensure_presentation_active(self) -> bool:
-        """
-        Ensure a presentation is active. If none is active, activate the first presentation
-        in the active playlist.
-
-        Returns:
-            True if a presentation is active, False otherwise
-        """
-        active = self.get_active_presentation()
-        if active and isinstance(active, dict):
-            return True
-
-        playlist = self.get_active_playlist()
-        if playlist and isinstance(playlist, dict) and "presentation" in playlist:
-            result = self._request("GET", "v1/playlist/active/presentation/trigger")
-            if result is not None:
-                return True
-
-        result = self._request("GET", "v1/presentation/focused/trigger")
         return result is not None
 
 

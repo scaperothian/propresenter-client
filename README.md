@@ -33,26 +33,6 @@ poetry shell
 poetry run propresenter-slides --host=<your-host>
 ```
 
-## Configuration File
-
-The tool reads defaults from `presentation.config` in YAML format before processing CLI arguments. CLI flags override config values.
-
-Example `presentation.config`:
-
-```yaml
-host: localhost
-port: 1025
-library: Default
-playlist: Service
-log-level: WARNING
-```
-
-To use a different config file, pass `--config-file`:
-
-```bash
-propresenter-slides --config-file my-presentation.config
-```
-
 ## Quick Start
 
 ```python
@@ -69,8 +49,8 @@ controller.go_to_slide(1)  # Go to first slide (1-indexed)
 # Activate specific presentation by UUID
 controller.activate_presentation("92B5E6E2-5E99-4F54-BAD3-6FBD7D2EE675")
 
-# Activate first presentation in Service playlist
-controller.activate_first_service_playlist_presentation()
+# Activate first presentation in a library
+controller.activate_first_library_presentation("Default")
 ```
 
 ## Interactive Mode
@@ -106,10 +86,10 @@ When `--presentation` is specified, it searches the configured library for a mat
 
 ### CLI Override
 
-CLI arguments override any values loaded from `presentation.config`.
+CLI arguments allow you to customize behavior:
 
 ```bash
-propresenter-slides --library="Worship" --playlist="Service" --log-level=DEBUG
+propresenter-slides --library="Worship" --log-level=DEBUG
 ```
 
 ## Testing
