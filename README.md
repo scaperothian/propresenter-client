@@ -33,6 +33,26 @@ poetry shell
 poetry run propresenter-slides --host=<your-host>
 ```
 
+## Configuration File
+
+The tool reads defaults from `presentation.config` in YAML format before processing CLI arguments. CLI flags override config values.
+
+Example `presentation.config`:
+
+```yaml
+host: localhost
+port: 1025
+library: Default
+playlist: Service
+log-level: WARNING
+```
+
+To use a different config file, pass `--config-file`:
+
+```bash
+propresenter-slides --config-file my-presentation.config
+```
+
 ## Quick Start
 
 ```python
@@ -56,11 +76,14 @@ controller.activate_first_service_playlist_presentation()
 ## Interactive Mode
 
 ```bash
-# Default behavior: activates first presentation in Service playlist
+# Default behavior: activates first presentation in Default library
 propresenter-slides --host=192.168.1.100
 
 # Activate specific presentation by name before entering interactive mode
 propresenter-slides --host=192.168.1.100 --presentation="Amazing Grace"
+
+# Use a different library
+propresenter-slides --host=192.168.1.100 --library="Worship"
 ```
 
 You can also enable request diagnostics with logging:
@@ -77,9 +100,17 @@ Then use:
 
 ### Default Behavior
 
-When no `--presentation` argument is provided, the tool automatically activates the first presentation in the Service playlist (`GET /v1/playlist/Service/0/trigger`).
+When no `--presentation` argument is provided, the tool automatically activates the first presentation in the configured library (`GET /v1/library/<library>/0/trigger`).
 
-When `--presentation` is specified, it searches the Default library for a matching presentation name and activates it before entering interactive mode.
+When `--presentation` is specified, it searches the configured library for a matching presentation name and activates it before entering interactive mode.
+
+### CLI Override
+
+CLI arguments override any values loaded from `presentation.config`.
+
+```bash
+propresenter-slides --library="Worship" --playlist="Service" --log-level=DEBUG
+```
 
 ## Testing
 

@@ -156,6 +156,18 @@ class ProPresenterController:
         """
         return self._request("GET", "v1/playlist/active")
 
+    def get_library(self, library_name: str) -> Optional[dict]:
+        """
+        Get a named library's contents.
+
+        Args:
+            library_name: The library name to query
+
+        Returns:
+            Library data if available, None if request fails
+        """
+        return self._request("GET", f"v1/library/{library_name}")
+
     def get_library_default(self) -> Optional[dict]:
         """
         Get the Default library contents.
@@ -163,7 +175,7 @@ class ProPresenterController:
         Returns:
             Library data if available, None if request fails
         """
-        return self._request("GET", "v1/library/Default")
+        return self.get_library("Default")
 
     def find_presentation_uuid_by_name(
         self, presentation_name: str, library_data: Optional[dict]
@@ -230,6 +242,19 @@ class ProPresenterController:
             True if activation request succeeded, False otherwise
         """
         result = self._request("GET", f"v1/presentation/{uuid}/trigger")
+        return result is not None
+
+    def activate_first_library_presentation(self, library_name: str) -> bool:
+        """
+        Activate the first presentation in the specified library.
+
+        Args:
+            library_name: The library name to activate the first presentation from
+
+        Returns:
+            True if activation request succeeded, False otherwise
+        """
+        result = self._request("GET", f"v1/library/{library_name}/0/trigger")
         return result is not None
 
     def activate_first_service_playlist_presentation(self) -> bool:
@@ -359,9 +384,15 @@ def main() -> None:
         help="Request timeout in seconds (default: 5)"
     )
     parser.add_argument(
+        "--library",
+        type=str,
+        default="Default",
+        help="Library name to use for presentation lookup and default activation (default: Default)"
+    )
+    parser.add_argument(
         "--presentation",
         type=str,
-        help="Presentation title to activate from the Default library before entering interactive mode"
+        help="Presentation title to activate from the configured library before entering interactive mode"
     )
     parser.add_argument(
         "--log-level",
@@ -393,14 +424,14 @@ def main() -> None:
     print(f"Connected to ProPresenter at {args.host}:{args.port}")
 
     if args.presentation:
-        library = controller.get_library_default()
+        library = controller.get_library(args.library)
         if library is None:
-            print(f"Error: Could not query Default library at {args.host}:{args.port}")
+            print(f"Error: Could not query {args.library} library at {args.host}:{args.port}")
             sys.exit(1)
 
         presentation_uuid = controller.find_presentation_uuid_by_name(args.presentation, library)
         if presentation_uuid is None:
-            print(f"Error: Presentation '{args.presentation}' not found in Default library")
+            print(f"Error: Presentation '{args.presentation}' not found in {args.library} library")
             sys.exit(1)
 
         if controller.activate_presentation(presentation_uuid):
@@ -409,11 +440,11 @@ def main() -> None:
             print(f"Error: Failed to activate presentation UUID {presentation_uuid}")
             sys.exit(1)
     else:
-        # Default behavior: activate first presentation in Service playlist
-        if controller.activate_first_service_playlist_presentation():
-            print("Activated first presentation in Service playlist")
+        # Default behavior: activate first presentation in configured library
+        if controller.activate_first_library_presentation(args.library):
+            print(f"Activated first presentation in {args.library} library")
         else:
-            print("Warning: Could not activate first presentation in Service playlist")
+            print(f"Warning: Could not activate first presentation in {args.library} library")
 
     interactive_prompt(controller)
 

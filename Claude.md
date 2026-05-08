@@ -21,11 +21,14 @@
 - `previous_slide()` - Go to previous slide (GET v1/presentation/active/previous/trigger)
 - `go_to_slide(slide_index)` - Jump to specific slide by number (1-indexed)
 - `get_status()` - Fetch current slide status (GET v1/status/slide)
+- `get_slide_position()` - Get current slide position and total slide count
 - `get_active_presentation()` - Get currently active presentation details
 - `get_active_playlist()` - Get currently active playlist details
+- `get_library(library_name)` - Get a named library's contents
 - `get_library_default()` - Get Default library contents (GET v1/library/Default)
 - `find_presentation_uuid_by_name(presentation_name, library_data)` - Find presentation UUID by name in library
 - `activate_presentation(uuid)` - Activate presentation by UUID (GET v1/presentation/{uuid}/trigger)
+- `activate_first_library_presentation(library_name)` - Activate first presentation in library (GET v1/library/{library}/0/trigger)
 - `activate_first_service_playlist_presentation()` - Activate first presentation in Service playlist (GET v1/playlist/Service/0/trigger)
 - `ensure_presentation_active()` - Ensure a presentation is active (fallback method)
 - `_request()` - Generic HTTP request handler
@@ -34,7 +37,8 @@
 - `--host` - ProPresenter host/IP address (default: localhost)
 - `--port` - ProPresenter port (default: 1025)
 - `--timeout` - Request timeout in seconds (default: 5)
-- `--presentation` - Presentation title to activate from Default library before interactive mode
+- `--library` - Library name to use for presentation lookup and default activation (default: Default)
+- `--presentation` - Presentation title to activate from configured library before interactive mode
 - `--log-level` - Set logging verbosity for request diagnostics (default: WARNING)
 
 ### CLI Commands
@@ -93,7 +97,7 @@ poetry run pytest --cov=propresenter_slides
 - Base API URL: `http://{host}:{port}` (endpoints start with v1/)
 - Defaults: localhost:1025 with 5-second timeout
 - Connection verified on startup before entering interactive mode
-- Default behavior: activates first presentation in Service playlist (`GET v1/playlist/Service/0/trigger`)
-- `--presentation` option: searches Default library for matching presentation name, then activates it
+- Default behavior: activates first presentation in configured library
+- `--library` option: searches specified library for matching presentation name, then activates it (default: Default); also used for first-presentation activation if no presentation specified
 - `go_to_slide` uses 1-indexed slide numbers for presentation navigation
 - All slide control requests use GET method with /trigger endpoints
