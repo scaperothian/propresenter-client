@@ -4,7 +4,7 @@ Unit tests for ProPresenterController
 
 import pytest
 from unittest.mock import patch, MagicMock
-from propresenter_slides.main import ProPresenterController
+from propresenter_slides.main import ProPresenterController, interactive_prompt
 
 
 class TestProPresenterController:
@@ -95,9 +95,68 @@ class TestProPresenterController:
         assert result is True
         mock_request.assert_called_once_with(
             "GET",
-            "http://localhost:1025/v1/presentation/active/3/trigger",
+            "http://localhost:1025/v1/presentation/active/2/trigger",
             timeout=5
         )
+
+    @patch("propresenter_slides.main.requests.request")
+    def test_go_to_slide_first_slide_success(self, mock_request, controller):
+        """Test first slide uses API index 0 when given 1"""
+        mock_response = MagicMock()
+        mock_response.text = ""
+        mock_response.json.side_effect = ValueError()  # Empty response
+        mock_request.return_value = mock_response
+
+        result = controller.go_to_slide(1)
+
+        assert result is True
+        mock_request.assert_called_once_with(
+            "GET",
+            "http://localhost:1025/v1/presentation/active/0/trigger",
+            timeout=5
+        )
+
+    def test_get_slide_position_returns_1_indexed(self, controller):
+        """Test slide position is returned in 1-indexed form"""
+        controller.get_status = MagicMock(return_value={"currentSlide": 2, "slideCount": 3})
+
+        assert controller.get_slide_position() == (3, 3)
+
+    @patch("builtins.input", side_effect=["n", "q"])
+    @patch("builtins.print")
+    def test_interactive_prompt_next_at_last_slide(self, mock_print, mock_input, controller):
+        """Test that 'n' at last slide does not move forward"""
+        controller.get_status = MagicMock(return_value={"currentSlide": 2, "slideCount": 3})
+        controller.next_slide = MagicMock(return_value=True)
+
+        interactive_prompt(controller)
+
+        mock_print.assert_any_call("Cannot go beyond the last slide. Prompt attempted to go beyond the last slide.")
+        controller.next_slide.assert_not_called()
+
+    @patch("builtins.input", side_effect=["b", "q"])
+    @patch("builtins.print")
+    def test_interactive_prompt_previous_at_first_slide(self, mock_print, mock_input, controller):
+        """Test that 'b' at first slide does not move backward"""
+        controller.get_status = MagicMock(return_value={"currentSlide": 0, "slideCount": 3})
+        controller.previous_slide = MagicMock(return_value=True)
+
+        interactive_prompt(controller)
+
+        mock_print.assert_any_call("Cannot go before the first slide. Prompt attempted to go beyond the first slide.")
+        controller.previous_slide.assert_not_called()
+
+    @patch("builtins.input", side_effect=["5", "q"])
+    @patch("builtins.print")
+    def test_interactive_prompt_number_beyond_last_slide(self, mock_print, mock_input, controller):
+        """Test a numeric slide request beyond the last slide is blocked"""
+        controller.get_status = MagicMock(return_value={"currentSlide": 1, "slideCount": 3})
+        controller.go_to_slide = MagicMock(return_value=True)
+
+        interactive_prompt(controller)
+
+        mock_print.assert_any_call("Cannot go beyond the last slide. Prompt attempted to go beyond the last slide.")
+        controller.go_to_slide.assert_not_called()
 
     @patch("propresenter_slides.main.requests.request")
     def test_request_failure(self, mock_request, controller):

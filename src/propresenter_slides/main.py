@@ -3,9 +3,12 @@ Main module for ProPresenter API interface
 """
 
 import argparse
+import logging
 import requests
 import sys
 from typing import Optional
+
+logger = logging.getLogger(__name__)
 
 
 class ProPresenterController:
@@ -49,7 +52,7 @@ class ProPresenterController:
             else:
                 return {}
         except requests.RequestException as e:
-            print(f"Request failed: {e}")
+            logger.debug(f"Request failed: {e}")
             return None
 
     def next_slide(self) -> bool:
@@ -66,12 +69,60 @@ class ProPresenterController:
         """Get the current presentation status."""
         return self._request("GET", "v1/status/slide")
 
+    def get_slide_position(self) -> Optional[tuple[int, int]]:
+        """
+        Get the current slide position and total slide count.
+
+        Returns:
+            A tuple of (current_slide_number, total_slides) in 1-indexed form,
+            or None if the slide position cannot be determined from status.
+        """
+        status = self.get_status()
+        if not status or not isinstance(status, dict):
+            return None
+
+        current = None
+        total = None
+
+        if "currentSlide" in status and isinstance(status["currentSlide"], dict):
+            current = status["currentSlide"].get("index")
+            if current is None:
+                current = status["currentSlide"].get("number")
+            total = status["currentSlide"].get("total")
+            if total is None:
+                total = status["currentSlide"].get("count")
+
+        if current is None and "slide" in status and isinstance(status["slide"], dict):
+            current = status["slide"].get("index")
+            if current is None:
+                current = status["slide"].get("number")
+            total = status["slide"].get("total")
+            if total is None:
+                total = status["slide"].get("count")
+
+        if current is None:
+            for key in ("currentSlide", "slideIndex", "currentSlideIndex"):
+                if key in status:
+                    current = status[key]
+                    break
+
+        if total is None:
+            for key in ("slideCount", "totalSlides", "slideTotal", "totalSlideCount"):
+                if key in status:
+                    total = status[key]
+                    break
+
+        if isinstance(current, int) and isinstance(total, int):
+            return current + 1, total
+
+        return None
+
     def go_to_slide(self, slide_number: int) -> bool:
         """
         Go to a specific slide number.
 
         Args:
-            slide_number: The slide index to navigate to (1-indexed)
+            slide_number: The slide number to navigate to (1-indexed)
 
         Returns:
             True if successful, False otherwise
@@ -79,9 +130,11 @@ class ProPresenterController:
         if slide_number <= 0:
             slide_number = 1  # Ensure slide number is at least 1
 
+        api_slide_number = max(slide_number - 1, 0)
+
         result = self._request(
             "GET",
-            f"v1/presentation/active/{slide_number}/trigger"
+            f"v1/presentation/active/{api_slide_number}/trigger"
         )
         return result is not None
 
@@ -218,12 +271,12 @@ def interactive_prompt(controller: ProPresenterController) -> None:
     Supported commands:
     - 'n': next slide
     - 'b': previous slide
-    - <number>: go to specific slide index (0-indexed)
+    - <number>: go to specific slide number (1-indexed)
     - 'q': quit
     """
     print("\n=== ProPresenter Slide Controller ===")
-    print("Commands: 'n' (next), 'b' (back), <number> (go to slide index), 'q' (quit)")
-    print("Note: Slide indices are 0-indexed (first slide = 0)")
+    print("Commands: 'n' (next), 'b' (back), <number> (go to slide number), 'q' (quit)")
+    print("Note: Slide numbers are 1-indexed (first slide = 1)")
     print("====================================\n")
 
     while True:
@@ -237,11 +290,23 @@ def interactive_prompt(controller: ProPresenterController) -> None:
                 print("Exiting...")
                 break
             elif user_input == 'n':
+                slide_position = controller.get_slide_position()
+                if slide_position:
+                    current_slide, total_slides = slide_position
+                    if current_slide >= total_slides:
+                        print("Cannot go beyond the last slide. Prompt attempted to go beyond the last slide.")
+                        continue
                 if controller.next_slide():
                     print("✓ Moved to next slide")
                 else:
                     print("✗ Failed to move to next slide")
             elif user_input == 'b':
+                slide_position = controller.get_slide_position()
+                if slide_position:
+                    current_slide, _ = slide_position
+                    if current_slide <= 1:
+                        print("Cannot go before the first slide. Prompt attempted to go beyond the first slide.")
+                        continue
                 if controller.previous_slide():
                     print("✓ Moved to previous slide")
                 else:
@@ -250,12 +315,21 @@ def interactive_prompt(controller: ProPresenterController) -> None:
                 # Try to parse as slide number
                 try:
                     slide_num = int(user_input)
+                    if slide_num <= 0:
+                        print("Invalid slide number. Use 1 or greater.")
+                        continue
+                    slide_position = controller.get_slide_position()
+                    if slide_position:
+                        _, total_slides = slide_position
+                        if slide_num > total_slides:
+                            print("Cannot go beyond the last slide. Prompt attempted to go beyond the last slide.")
+                            continue
                     if controller.go_to_slide(slide_num):
                         print(f"✓ Moved to slide {slide_num}")
                     else:
                         print(f"✗ Failed to move to slide {slide_num}")
                 except ValueError:
-                    print("Invalid command. Use 'n', 'b', a slide index (0-based), or 'q' to quit.")
+                    print("Invalid command. Use 'n', 'b', a slide number (1-based), or 'q' to quit.")
         except KeyboardInterrupt:
             print("\n\nExiting...")
             break
@@ -289,8 +363,20 @@ def main() -> None:
         type=str,
         help="Presentation title to activate from the Default library before entering interactive mode"
     )
+    parser.add_argument(
+        "--log-level",
+        type=str,
+        choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+        default="WARNING",
+        help="Set logging verbosity for request diagnostics (default: WARNING)"
+    )
 
     args = parser.parse_args()
+
+    logging.basicConfig(
+        level=getattr(logging, args.log_level),
+        format="%(asctime)s [%(levelname)s] %(message)s"
+    )
 
     controller = ProPresenterController(
         host=args.host,

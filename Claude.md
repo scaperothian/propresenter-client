@@ -19,7 +19,7 @@
 ### ProPresenterController Methods
 - `next_slide()` - Advance to next slide (GET v1/presentation/active/next/trigger)
 - `previous_slide()` - Go to previous slide (GET v1/presentation/active/previous/trigger)
-- `go_to_slide(slide_index)` - Jump to specific slide by index (0-indexed)
+- `go_to_slide(slide_index)` - Jump to specific slide by number (1-indexed)
 - `get_status()` - Fetch current slide status (GET v1/status/slide)
 - `get_active_presentation()` - Get currently active presentation details
 - `get_active_playlist()` - Get currently active playlist details
@@ -35,11 +35,12 @@
 - `--port` - ProPresenter port (default: 1025)
 - `--timeout` - Request timeout in seconds (default: 5)
 - `--presentation` - Presentation title to activate from Default library before interactive mode
+- `--log-level` - Set logging verbosity for request diagnostics (default: WARNING)
 
 ### CLI Commands
 - `n` - Next slide
 - `b` - Previous slide (back)
-- `<number>` - Go to specific slide index (0-indexed, so 0 = first slide)
+- `<number>` - Go to specific slide number (1-indexed, so 1 = first slide)
 - `q` - Quit
 
 ## Common Tasks
@@ -94,5 +95,5 @@ poetry run pytest --cov=propresenter_slides
 - Connection verified on startup before entering interactive mode
 - Default behavior: activates first presentation in Service playlist (`GET v1/playlist/Service/0/trigger`)
 - `--presentation` option: searches Default library for matching presentation name, then activates it
-- API endpoints use 0-indexed slide indices
+- `go_to_slide` uses 1-indexed slide numbers for presentation navigation
 - All slide control requests use GET method with /trigger endpoints
