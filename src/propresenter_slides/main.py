@@ -222,6 +222,18 @@ class ProPresenterController:
 
         return None
 
+    def get_presentation_details(self, uuid: str) -> Optional[dict]:
+        """
+        Get details for a presentation by UUID.
+
+        Args:
+            uuid: The presentation UUID to fetch details for
+
+        Returns:
+            Presentation details if available, None if request fails
+        """
+        return self._request("GET", f"v1/presentation/{uuid}")
+
     def activate_presentation(self, uuid: str) -> bool:
         """
         Activate a presentation by UUID.
@@ -355,6 +367,11 @@ def main() -> None:
         help="Presentation title to activate from the configured library before entering interactive mode"
     )
     parser.add_argument(
+        "--list-details",
+        action="store_true",
+        help="Print details for the specified presentation and exit (requires --presentation)"
+    )
+    parser.add_argument(
         "--log-level",
         type=str,
         choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
@@ -383,6 +400,10 @@ def main() -> None:
 
     print(f"Connected to ProPresenter at {args.host}:{args.port}")
 
+    if args.list_details and not args.presentation:
+        print("Error: --list-details requires --presentation")
+        sys.exit(1)
+
     if args.presentation:
         library = controller.get_library(args.library)
         if library is None:
@@ -393,6 +414,15 @@ def main() -> None:
         if presentation_uuid is None:
             print(f"Error: Presentation '{args.presentation}' not found in {args.library} library")
             sys.exit(1)
+
+        if args.list_details:
+            details = controller.get_presentation_details(presentation_uuid)
+            if details is None:
+                print(f"Error: Could not fetch details for '{args.presentation}' (UUID: {presentation_uuid})")
+                sys.exit(1)
+            import json
+            print(json.dumps(details, indent=2))
+            return
 
         if controller.activate_presentation(presentation_uuid):
             print(f"Activated '{args.presentation}' (UUID: {presentation_uuid})")
