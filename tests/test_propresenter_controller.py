@@ -286,6 +286,33 @@ class TestProPresenterController:
         )
 
     @patch("propresenter_slides.main.requests.request")
+    def test_get_presentation_details_success(self, mock_request, controller):
+        """Test successful retrieval of presentation details by UUID"""
+        mock_response = MagicMock()
+        mock_response.text = '{"uuid": "7A465FF0-FF42-4785-82F1-5CF0DC136BAE", "name": "Mary Long"}'
+        mock_response.json.return_value = {"uuid": "7A465FF0-FF42-4785-82F1-5CF0DC136BAE", "name": "Mary Long"}
+        mock_request.return_value = mock_response
+
+        result = controller.get_presentation_details("7A465FF0-FF42-4785-82F1-5CF0DC136BAE")
+
+        assert result == {"uuid": "7A465FF0-FF42-4785-82F1-5CF0DC136BAE", "name": "Mary Long"}
+        mock_request.assert_called_once_with(
+            "GET",
+            "http://localhost:1025/v1/presentation/7A465FF0-FF42-4785-82F1-5CF0DC136BAE",
+            timeout=5
+        )
+
+    @patch("propresenter_slides.main.requests.request")
+    def test_get_presentation_details_failure(self, mock_request, controller):
+        """Test failed retrieval of presentation details returns None"""
+        import requests
+        mock_request.side_effect = requests.RequestException("Connection refused")
+
+        result = controller.get_presentation_details("7A465FF0-FF42-4785-82F1-5CF0DC136BAE")
+
+        assert result is None
+
+    @patch("propresenter_slides.main.requests.request")
     def test_get_library_success(self, mock_request, controller):
         """Test successful retrieval of a named library"""
         mock_response = MagicMock()
