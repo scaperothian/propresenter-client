@@ -49,6 +49,9 @@ controller.go_to_slide(1)  # Go to first slide (1-indexed)
 # Activate specific presentation by UUID
 controller.activate_presentation("92B5E6E2-5E99-4F54-BAD3-6FBD7D2EE675")
 
+# Fetch details for a presentation by UUID
+controller.get_presentation_details("92B5E6E2-5E99-4F54-BAD3-6FBD7D2EE675")
+
 # Activate first presentation in a library
 controller.activate_first_library_presentation("Default")
 ```
@@ -61,6 +64,9 @@ propresenter-slides --host=192.168.1.100
 
 # Activate specific presentation by name before entering interactive mode
 propresenter-slides --host=192.168.1.100 --presentation="Amazing Grace"
+
+# Print presentation details and exit (no interactive mode)
+propresenter-slides --host=192.168.1.100 --presentation="Amazing Grace" --list-details
 
 # Use a different library
 propresenter-slides --host=192.168.1.100 --library="Worship"

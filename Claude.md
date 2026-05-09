@@ -26,6 +26,7 @@
 - `get_library(library_name)` - Get a named library's contents
 - `get_library_default()` - Get Default library contents (GET v1/library/Default)
 - `find_presentation_uuid_by_name(presentation_name, library_data)` - Find presentation UUID by name in library
+- `get_presentation_details(uuid)` - Fetch full details for a presentation by UUID (GET v1/presentation/{uuid})
 - `activate_presentation(uuid)` - Activate presentation by UUID (GET v1/presentation/{uuid}/trigger)
 - `activate_first_library_presentation(library_name)` - Activate first presentation in library (GET v1/library/{library}/0/trigger)
 - `_request()` - Generic HTTP request handler
@@ -36,6 +37,7 @@
 - `--timeout` - Request timeout in seconds (default: 5)
 - `--library` - Library name to use for presentation lookup and default activation (default: Default)
 - `--presentation` - Presentation title to activate from configured library before interactive mode
+- `--list-details` - Print full JSON details for the specified presentation and exit (requires `--presentation`)
 - `--log-level` - Set logging verbosity for request diagnostics (default: WARNING)
 
 ### CLI Commands
