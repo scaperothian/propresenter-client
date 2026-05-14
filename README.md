@@ -1,107 +1,78 @@
-# propresenter-slides
+# propresenter-client
 
-Interface with ProPresenter's APIs to cue slides remotely using Python.
+Python client for the ProPresenter REST API.
 
 ## Description
 
-This Python library provides a convenient interface for interacting with ProPresenter's APIs, allowing you to programmatically control and cue slides in presentations remotely.
+A general-purpose Python library and CLI for interacting with ProPresenter's REST API. Provides a `ProPresenterController` class for programmatic access to any ProPresenter API endpoint, plus an interactive **presentation mode** CLI for live slide control.
 
 ## Features
 
-- Remote slide control via ProPresenter APIs
-- Easy-to-use Python interface
-- Support for common slide operations
+- `ProPresenterController` class covering common ProPresenter API endpoints
+- Interactive presentation mode for live slide navigation
+- Extensible design — add new API endpoints as methods over time
 
 ## Installation
 
 ```bash
-pip install propresenter-slides
+pip install propresenter-client
 ```
 
 ## Development Setup
-
-To set up the development environment with Poetry:
 
 ```bash
 # Install dependencies
 poetry install
 
-# Activate the virtual environment
-poetry shell
-
-# Or run commands directly within the Poetry environment
-poetry run propresenter-slides --host=<your-host>
+# Run commands within the Poetry environment
+poetry run propresenter-client --host=<your-host>
 ```
 
 ## Quick Start
 
 ```python
-from propresenter_slides import ProPresenterController
+from propresenter_client import ProPresenterController
 
-# Initialize controller
 controller = ProPresenterController(host="localhost", port=1025)
 
-# Control slides
+# Slide control
 controller.next_slide()
 controller.previous_slide()
-controller.go_to_slide(1)  # Go to first slide (1-indexed)
+controller.go_to_slide(1)  # 1-indexed
 
-# Activate specific presentation by UUID
+# Presentations
 controller.activate_presentation("92B5E6E2-5E99-4F54-BAD3-6FBD7D2EE675")
-
-# Fetch details for a presentation by UUID
 controller.get_presentation_details("92B5E6E2-5E99-4F54-BAD3-6FBD7D2EE675")
-
-# Activate first presentation in a library
 controller.activate_first_library_presentation("Default")
 ```
 
-## Interactive Mode
+## Interactive Presentation Mode
 
 ```bash
-# Default behavior: activates first presentation in Default library
-propresenter-slides --host=192.168.1.100
+# Default: activates first presentation in Default library
+propresenter-client --host=192.168.1.100
 
-# Activate specific presentation by name before entering interactive mode
-propresenter-slides --host=192.168.1.100 --presentation="Amazing Grace"
+# Activate a specific presentation by name before entering interactive mode
+propresenter-client --host=192.168.1.100 --presentation="Amazing Grace"
 
 # Print presentation details and exit (no interactive mode)
-propresenter-slides --host=192.168.1.100 --presentation="Amazing Grace" --list-details
+propresenter-client --host=192.168.1.100 --presentation="Amazing Grace" --list-details
 
 # Use a different library
-propresenter-slides --host=192.168.1.100 --library="Worship"
+propresenter-client --host=192.168.1.100 --library="Worship"
+
+# Enable request diagnostics
+propresenter-client --host=192.168.1.100 --log-level=DEBUG
 ```
 
-You can also enable request diagnostics with logging:
-
-```bash
-propresenter-slides --host=192.168.1.100 --log-level=DEBUG
-```
-
-Then use (no Enter required for single-key commands):
-- `n` - Next slide (fires immediately)
-- `b` - Back to previous slide (fires immediately)
-- `q` - Quit (fires immediately)
-- `1`, `2`, `3`, etc. - Go to specific slide (1-indexed, press Enter to confirm)
-- `Escape` - Cancel a partially typed slide number
-
-### Default Behavior
-
-When no `--presentation` argument is provided, the tool automatically activates the first presentation in the configured library (`GET /v1/library/<library>/0/trigger`).
-
-When `--presentation` is specified, it searches the configured library for a matching presentation name and activates it before entering interactive mode.
-
-### CLI Override
-
-CLI arguments allow you to customize behavior:
-
-```bash
-propresenter-slides --library="Worship" --log-level=DEBUG
-```
+Interactive commands (no Enter required for single-key commands):
+- `n` — Next slide
+- `b` — Back to previous slide
+- `q` — Quit
+- `1`, `2`, `3`, … — Go to specific slide (1-indexed, press Enter to confirm)
+- `Escape` — Cancel a partially typed slide number
 
 ## Testing
-
-Run the test suite:
 
 ```bash
 # Run all tests
@@ -117,10 +88,10 @@ poetry run pytest tests/test_propresenter_controller.py::TestProPresenterControl
 poetry run pytest tests/test_propresenter_controller.py::TestProPresenterController::test_get_status_success -v
 
 # Run tests matching a pattern
-poetry run pytest -k "test_next" -v
+poetry run pytest -k "test_get" -v
 
 # Generate coverage report
-poetry run pytest --cov=propresenter_slides
+poetry run pytest --cov=propresenter_client
 ```
 
 ## Requirements
@@ -131,7 +102,3 @@ poetry run pytest --cov=propresenter_slides
 ## License
 
 MIT
-
-## Contributing
-
-Contributions are welcome! Please read our contributing guidelines for details on our code of conduct and the process for submitting pull requests.

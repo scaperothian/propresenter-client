@@ -2,11 +2,11 @@
 
 ## Project Overview
 
-**propresenter-slides** is a Python CLI tool that provides remote control interface for ProPresenter presentations via its REST APIs. It can activate presentations by name from the Default library or automatically activate the first presentation in a configured library.
+**propresenter-client** is a general-purpose Python client and CLI for the ProPresenter REST API. It exposes a `ProPresenterController` class for programmatic access to any ProPresenter endpoint, and ships an interactive **presentation mode** CLI as a built-in usage example. New modes can be added over time alongside presentation mode.
 
 ## Key Structure
 
-- **src/propresenter_slides/main.py** - Main module containing:
+- **src/propresenter_client/main.py** - Main module containing:
   - `ProPresenterController` - API client class for ProPresenter communication
   - `_get_command()` - Raw terminal input helper for single-keypress commands
   - `interactive_prompt()` - CLI interactive loop for user commands
@@ -70,7 +70,7 @@ Edit the argparse section in `main()` to add/modify command-line flags.
 ### Installation & Development
 ```bash
 poetry install
-poetry run propresenter-slides --host=<host>
+poetry run propresenter-client --host=<host>
 ```
 
 ### Running Tests
@@ -91,7 +91,7 @@ poetry run pytest tests/test_propresenter_controller.py::TestProPresenterControl
 poetry run pytest -k "test_get" -v
 
 # Run with coverage report
-poetry run pytest --cov=propresenter_slides
+poetry run pytest --cov=propresenter_client
 ```
 
 ## Development Notes
