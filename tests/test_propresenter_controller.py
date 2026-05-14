@@ -4,7 +4,7 @@ Unit tests for ProPresenterController
 
 import pytest
 from unittest.mock import patch, MagicMock
-from propresenter_slides.main import ProPresenterController, interactive_prompt
+from propresenter_client.main import ProPresenterController, interactive_prompt
 
 
 class TestProPresenterController:
@@ -31,7 +31,7 @@ class TestProPresenterController:
         assert controller.timeout == 5
         assert controller.base_url == "http://localhost:1025"
 
-    @patch("propresenter_slides.main.requests.request")
+    @patch("propresenter_client.main.requests.request")
     def test_get_status_success(self, mock_request, controller):
         """Test successful status retrieval"""
         mock_response = MagicMock()
@@ -48,7 +48,7 @@ class TestProPresenterController:
             timeout=5
         )
 
-    @patch("propresenter_slides.main.requests.request")
+    @patch("propresenter_client.main.requests.request")
     def test_next_slide_success(self, mock_request, controller):
         """Test successful next slide trigger"""
         mock_response = MagicMock()
@@ -65,7 +65,7 @@ class TestProPresenterController:
             timeout=5
         )
 
-    @patch("propresenter_slides.main.requests.request")
+    @patch("propresenter_client.main.requests.request")
     def test_previous_slide_success(self, mock_request, controller):
         """Test successful previous slide trigger"""
         mock_response = MagicMock()
@@ -82,7 +82,7 @@ class TestProPresenterController:
             timeout=5
         )
 
-    @patch("propresenter_slides.main.requests.request")
+    @patch("propresenter_client.main.requests.request")
     def test_go_to_slide_success(self, mock_request, controller):
         """Test successful go to slide"""
         mock_response = MagicMock()
@@ -99,7 +99,7 @@ class TestProPresenterController:
             timeout=5
         )
 
-    @patch("propresenter_slides.main.requests.request")
+    @patch("propresenter_client.main.requests.request")
     def test_go_to_slide_first_slide_success(self, mock_request, controller):
         """Test first slide uses API index 0 when given 1"""
         mock_response = MagicMock()
@@ -158,7 +158,7 @@ class TestProPresenterController:
         mock_print.assert_any_call("Cannot go beyond the last slide. Prompt attempted to go beyond the last slide.")
         controller.go_to_slide.assert_not_called()
 
-    @patch("propresenter_slides.main.requests.request")
+    @patch("propresenter_client.main.requests.request")
     def test_request_failure(self, mock_request, controller):
         """Test handling of request failures"""
         import requests
@@ -168,7 +168,7 @@ class TestProPresenterController:
 
         assert result is None
 
-    @patch("propresenter_slides.main.requests.request")
+    @patch("propresenter_client.main.requests.request")
     def test_request_with_empty_response(self, mock_request, controller):
         """Test handling of empty responses from trigger endpoints"""
         mock_response = MagicMock()
@@ -180,7 +180,7 @@ class TestProPresenterController:
 
         assert result == {}
 
-    @patch("propresenter_slides.main.requests.request")
+    @patch("propresenter_client.main.requests.request")
     def test_request_with_json_response(self, mock_request, controller):
         """Test handling of JSON responses"""
         mock_response = MagicMock()
@@ -192,7 +192,7 @@ class TestProPresenterController:
 
         assert result == {"data": "value"}
 
-    @patch("propresenter_slides.main.requests.request")
+    @patch("propresenter_client.main.requests.request")
     def test_get_active_presentation_success(self, mock_request, controller):
         """Test successful retrieval of active presentation"""
         mock_response = MagicMock()
@@ -209,7 +209,7 @@ class TestProPresenterController:
             timeout=5
         )
 
-    @patch("propresenter_slides.main.requests.request")
+    @patch("propresenter_client.main.requests.request")
     def test_get_library_default_success(self, mock_request, controller):
         """Test successful retrieval of Default library contents"""
         mock_response = MagicMock()
@@ -251,7 +251,7 @@ class TestProPresenterController:
 
         assert result is None
 
-    @patch("propresenter_slides.main.requests.request")
+    @patch("propresenter_client.main.requests.request")
     def test_activate_presentation_success(self, mock_request, controller):
         """Test successful presentation activation by UUID"""
         mock_response = MagicMock()
@@ -268,7 +268,7 @@ class TestProPresenterController:
             timeout=5
         )
 
-    @patch("propresenter_slides.main.requests.request")
+    @patch("propresenter_client.main.requests.request")
     def test_activate_first_library_presentation_success(self, mock_request, controller):
         """Test successful activation of first library presentation"""
         mock_response = MagicMock()
@@ -285,7 +285,7 @@ class TestProPresenterController:
             timeout=5
         )
 
-    @patch("propresenter_slides.main.requests.request")
+    @patch("propresenter_client.main.requests.request")
     def test_get_presentation_details_success(self, mock_request, controller):
         """Test successful retrieval of presentation details by UUID"""
         mock_response = MagicMock()
@@ -302,7 +302,7 @@ class TestProPresenterController:
             timeout=5
         )
 
-    @patch("propresenter_slides.main.requests.request")
+    @patch("propresenter_client.main.requests.request")
     def test_get_presentation_details_failure(self, mock_request, controller):
         """Test failed retrieval of presentation details returns None"""
         import requests
@@ -312,7 +312,7 @@ class TestProPresenterController:
 
         assert result is None
 
-    @patch("propresenter_slides.main.requests.request")
+    @patch("propresenter_client.main.requests.request")
     def test_get_slide_index_integer_response(self, mock_request, controller):
         """Test slide index when API returns a bare integer"""
         mock_response = MagicMock()
@@ -330,7 +330,7 @@ class TestProPresenterController:
             params={"chunked": "false"},
         )
 
-    @patch("propresenter_slides.main.requests.request")
+    @patch("propresenter_client.main.requests.request")
     def test_get_slide_index_dict_response(self, mock_request, controller):
         """Test slide index when API returns a dict with slideIndex key"""
         mock_response = MagicMock()
@@ -342,7 +342,7 @@ class TestProPresenterController:
 
         assert result == 3
 
-    @patch("propresenter_slides.main.requests.request")
+    @patch("propresenter_client.main.requests.request")
     def test_get_slide_index_presentation_index_shape(self, mock_request, controller):
         """Test slide index from PP7 presentation_index response shape"""
         payload = {
@@ -364,7 +364,7 @@ class TestProPresenterController:
 
         assert result == 2
 
-    @patch("propresenter_slides.main.requests.request")
+    @patch("propresenter_client.main.requests.request")
     def test_get_slide_index_failure(self, mock_request, controller):
         """Test slide index returns None on request failure"""
         import requests
@@ -374,7 +374,7 @@ class TestProPresenterController:
 
         assert result is None
 
-    @patch("propresenter_slides.main.requests.request")
+    @patch("propresenter_client.main.requests.request")
     def test_get_slide_index_chunked(self, mock_request, controller):
         """Test slide index passes chunked=true when requested"""
         mock_response = MagicMock()
@@ -391,7 +391,7 @@ class TestProPresenterController:
             params={"chunked": "true"},
         )
 
-    @patch("propresenter_slides.main.requests.request")
+    @patch("propresenter_client.main.requests.request")
     def test_get_library_success(self, mock_request, controller):
         """Test successful retrieval of a named library"""
         mock_response = MagicMock()

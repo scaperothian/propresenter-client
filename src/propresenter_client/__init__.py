@@ -1,5 +1,5 @@
 """
-ProPresenter Slides - Control ProPresenter slides remotely using Python
+propresenter-client - Python client for the ProPresenter REST API
 """
 
 __version__ = "0.1.0"
