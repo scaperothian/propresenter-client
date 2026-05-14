@@ -8,6 +8,7 @@
 
 - **src/propresenter_slides/main.py** - Main module containing:
   - `ProPresenterController` - API client class for ProPresenter communication
+  - `_get_command()` - Raw terminal input helper for single-keypress commands
   - `interactive_prompt()` - CLI interactive loop for user commands
   - `main()` - CLI entry point with argument parsing
 
@@ -41,10 +42,13 @@
 - `--log-level` - Set logging verbosity for request diagnostics (default: WARNING)
 
 ### CLI Commands
-- `n` - Next slide
-- `b` - Previous slide (back)
-- `<number>` - Go to specific slide number (1-indexed, so 1 = first slide)
-- `q` - Quit
+- `n` - Next slide (fires immediately, no Enter needed)
+- `b` - Previous slide / back (fires immediately, no Enter needed)
+- `q` - Quit (fires immediately, no Enter needed)
+- `<number>` + Enter - Go to specific slide number (1-indexed, so 1 = first slide)
+- `Escape` - Cancel a partially typed slide number
+
+Input uses raw terminal mode (`tty`/`termios`) on Unix/macOS so single-char commands register on keypress. Falls back to `input()` on unsupported platforms. The `_get_command()` helper in `main.py` handles this logic.
 
 ## Common Tasks
 

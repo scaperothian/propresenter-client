@@ -78,11 +78,12 @@ You can also enable request diagnostics with logging:
 propresenter-slides --host=192.168.1.100 --log-level=DEBUG
 ```
 
-Then use:
-- `n` - Next slide
-- `b` - Back to previous slide
-- `1`, `2`, `3`, etc. - Go to specific slide (1-indexed)
-- `q` - Quit
+Then use (no Enter required for single-key commands):
+- `n` - Next slide (fires immediately)
+- `b` - Back to previous slide (fires immediately)
+- `q` - Quit (fires immediately)
+- `1`, `2`, `3`, etc. - Go to specific slide (1-indexed, press Enter to confirm)
+- `Escape` - Cancel a partially typed slide number
 
 ### Default Behavior
 
