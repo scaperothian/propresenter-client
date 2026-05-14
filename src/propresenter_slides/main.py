@@ -138,6 +138,43 @@ class ProPresenterController:
         )
         return result is not None
 
+    def get_slide_index(self, chunked: bool = False) -> Optional[int]:
+        """
+        Get the zero-based index of the currently active slide.
+
+        Args:
+            chunked: If True, uses chunked slide indexing. Default False
+                     returns a flat index across the whole presentation.
+
+        Returns:
+            Zero-based slide index, or None if it cannot be determined.
+        """
+        result = self._request(
+            "GET", "v1/presentation/slide_index",
+            params={"chunked": str(chunked).lower()}
+        )
+        logger.debug("get_slide_index response: %s", result)
+        if result is None:
+            return None
+        if isinstance(result, int):
+            return result
+        if isinstance(result, dict):
+            # Bare index at top level
+            for key in ("slideIndex", "slide_index", "index"):
+                val = result.get(key)
+                if isinstance(val, int):
+                    return val
+            # Nested one level under a container key — check container first so we
+            # don't accidentally pick up a sibling id.index from presentation metadata.
+            for container in ("presentation_index", "presentationSlideIndex"):
+                nested = result.get(container)
+                if isinstance(nested, dict):
+                    for key in ("slideIndex", "slide_index", "index"):
+                        val = nested.get(key)
+                        if isinstance(val, int):
+                            return val
+        return None
+
     def get_active_presentation(self) -> Optional[dict]:
         """
         Get the currently active presentation.
@@ -146,6 +183,61 @@ class ProPresenterController:
             Presentation details if available, None if request fails
         """
         return self._request("GET", "v1/presentation/active")
+
+    def get_active_presentation_uuid(self) -> Optional[str]:
+        """
+        Get the UUID of the currently active presentation.
+
+        Returns:
+            UUID string if found, None if the active presentation cannot be
+            reached or its UUID cannot be parsed from the response.
+        """
+        data = self.get_active_presentation()
+        if not data:
+            return None
+        return ProPresenterController._extract_uuid(data)
+
+    @staticmethod
+    def _extract_uuid(data: object) -> Optional[str]:
+        """Recursively locate a presentation UUID in a ProPresenter API response."""
+        if not isinstance(data, dict):
+            return None
+        for key in ("uuid", "presentationId", "presentationUUID"):
+            val = data.get(key)
+            if isinstance(val, str) and val:
+                return val
+        for key in ("presentation", "id"):
+            result = ProPresenterController._extract_uuid(data.get(key))
+            if result:
+                return result
+        return None
+
+    @staticmethod
+    def find_slides(details: object) -> list:
+        """
+        Recursively collect ALL slides from a presentation details response,
+        flattening across every group so the returned list is in presentation order.
+
+        Args:
+            details: The response payload from get_presentation_details()
+
+        Returns:
+            Flat list of all slide objects across all groups, or [] if none found.
+        """
+        if isinstance(details, dict):
+            slides = details.get("slides")
+            if isinstance(slides, list):
+                return slides  # this dict is a group — return its slides directly
+            all_slides: list = []
+            for value in details.values():
+                all_slides.extend(ProPresenterController.find_slides(value))
+            return all_slides
+        elif isinstance(details, list):
+            all_slides = []
+            for item in details:
+                all_slides.extend(ProPresenterController.find_slides(item))
+            return all_slides
+        return []
 
     def get_library(self, library_name: str) -> Optional[dict]:
         """
@@ -261,6 +353,52 @@ class ProPresenterController:
         return result is not None
 
 
+def _get_command() -> str:
+    """Read a command without requiring Enter for single-char keys (n, b, q).
+    Digits are buffered until Enter is pressed. Falls back to input() on
+    platforms that don't support raw terminal mode."""
+    try:
+        import tty
+        import termios
+    except ImportError:
+        return input().strip().lower()
+
+    fd = sys.stdin.fileno()
+    old = termios.tcgetattr(fd)
+    buf = ""
+    try:
+        tty.setraw(fd)
+        while True:
+            ch = sys.stdin.read(1)
+            if ch == "\x03":  # Ctrl+C
+                raise KeyboardInterrupt
+            if ch == "\x1b":  # Escape — clear digit buffer
+                if buf:
+                    sys.stdout.write("\r" + " " * (len("Enter command: ") + len(buf)))
+                    sys.stdout.write("\rEnter command: ")
+                    sys.stdout.flush()
+                    buf = ""
+                continue
+            if not buf and ch.lower() in ("n", "b", "q"):
+                sys.stdout.write(ch.lower() + "\n")
+                sys.stdout.flush()
+                return ch.lower()
+            if ch.isdigit():
+                buf += ch
+                sys.stdout.write(ch)
+                sys.stdout.flush()
+            elif ch in ("\r", "\n") and buf:
+                sys.stdout.write("\n")
+                sys.stdout.flush()
+                return buf
+            elif ch in ("\x7f", "\x08") and buf:  # Backspace
+                buf = buf[:-1]
+                sys.stdout.write("\b \b")
+                sys.stdout.flush()
+    finally:
+        termios.tcsetattr(fd, termios.TCSADRAIN, old)
+
+
 def interactive_prompt(controller: ProPresenterController) -> None:
     """
     Start an interactive prompt for controlling the presentation.
@@ -278,7 +416,9 @@ def interactive_prompt(controller: ProPresenterController) -> None:
 
     while True:
         try:
-            user_input = input("Enter command: ").strip().lower()
+            sys.stdout.write("Enter command: ")
+            sys.stdout.flush()
+            user_input = _get_command()
 
             if not user_input:
                 continue

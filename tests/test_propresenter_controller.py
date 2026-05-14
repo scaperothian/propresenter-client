@@ -313,6 +313,85 @@ class TestProPresenterController:
         assert result is None
 
     @patch("propresenter_slides.main.requests.request")
+    def test_get_slide_index_integer_response(self, mock_request, controller):
+        """Test slide index when API returns a bare integer"""
+        mock_response = MagicMock()
+        mock_response.text = "2"
+        mock_response.json.return_value = 2
+        mock_request.return_value = mock_response
+
+        result = controller.get_slide_index()
+
+        assert result == 2
+        mock_request.assert_called_once_with(
+            "GET",
+            "http://localhost:1025/v1/presentation/slide_index",
+            timeout=5,
+            params={"chunked": "false"},
+        )
+
+    @patch("propresenter_slides.main.requests.request")
+    def test_get_slide_index_dict_response(self, mock_request, controller):
+        """Test slide index when API returns a dict with slideIndex key"""
+        mock_response = MagicMock()
+        mock_response.text = '{"slideIndex": 3}'
+        mock_response.json.return_value = {"slideIndex": 3}
+        mock_request.return_value = mock_response
+
+        result = controller.get_slide_index()
+
+        assert result == 3
+
+    @patch("propresenter_slides.main.requests.request")
+    def test_get_slide_index_presentation_index_shape(self, mock_request, controller):
+        """Test slide index from PP7 presentation_index response shape"""
+        payload = {
+            "presentation_index": {
+                "index": 2,
+                "presentation_id": {
+                    "uuid": "7A465FF0-FF42-4785-82F1-5CF0DC136BAE",
+                    "name": "The Pledge",
+                    "index": 19,
+                },
+            }
+        }
+        mock_response = MagicMock()
+        mock_response.text = str(payload)
+        mock_response.json.return_value = payload
+        mock_request.return_value = mock_response
+
+        result = controller.get_slide_index()
+
+        assert result == 2
+
+    @patch("propresenter_slides.main.requests.request")
+    def test_get_slide_index_failure(self, mock_request, controller):
+        """Test slide index returns None on request failure"""
+        import requests
+        mock_request.side_effect = requests.RequestException("Connection refused")
+
+        result = controller.get_slide_index()
+
+        assert result is None
+
+    @patch("propresenter_slides.main.requests.request")
+    def test_get_slide_index_chunked(self, mock_request, controller):
+        """Test slide index passes chunked=true when requested"""
+        mock_response = MagicMock()
+        mock_response.text = "1"
+        mock_response.json.return_value = 1
+        mock_request.return_value = mock_response
+
+        controller.get_slide_index(chunked=True)
+
+        mock_request.assert_called_once_with(
+            "GET",
+            "http://localhost:1025/v1/presentation/slide_index",
+            timeout=5,
+            params={"chunked": "true"},
+        )
+
+    @patch("propresenter_slides.main.requests.request")
     def test_get_library_success(self, mock_request, controller):
         """Test successful retrieval of a named library"""
         mock_response = MagicMock()
@@ -328,3 +407,50 @@ class TestProPresenterController:
             "http://localhost:1025/v1/library/Default",
             timeout=5
         )
+
+
+class TestFindSlides:
+    """Tests for ProPresenterController.find_slides — multi-group flattening."""
+
+    def test_single_group_returns_all_slides(self):
+        details = {"presentation": {"groups": [{"slides": [{"text": "a"}, {"text": "b"}]}]}}
+        result = ProPresenterController.find_slides(details)
+        assert result == [{"text": "a"}, {"text": "b"}]
+
+    def test_multiple_groups_are_flattened(self):
+        details = {
+            "presentation": {
+                "groups": [
+                    {"slides": [{"text": "verse 1"}]},
+                    {"slides": [{"text": "verse 2"}, {"text": "verse 3"}]},
+                ]
+            }
+        }
+        result = ProPresenterController.find_slides(details)
+        assert result == [{"text": "verse 1"}, {"text": "verse 2"}, {"text": "verse 3"}]
+
+    def test_first_group_empty_text_still_finds_later_groups(self):
+        details = {
+            "presentation": {
+                "groups": [
+                    {"slides": [{"text": ""}]},          # title/image slide
+                    {"slides": [{"text": "Mary long"}]}, # content slide
+                ]
+            }
+        }
+        result = ProPresenterController.find_slides(details)
+        assert len(result) == 2
+        assert result[1]["text"] == "Mary long"
+
+    def test_returns_empty_list_when_no_slides(self):
+        assert ProPresenterController.find_slides({}) == []
+        assert ProPresenterController.find_slides([]) == []
+
+    def test_flat_slides_key_at_top(self):
+        details = {"slides": [{"text": "only slide"}]}
+        result = ProPresenterController.find_slides(details)
+        assert result == [{"text": "only slide"}]
+
+    def test_non_dict_non_list_returns_empty(self):
+        assert ProPresenterController.find_slides("not a dict") == []
+        assert ProPresenterController.find_slides(42) == []
