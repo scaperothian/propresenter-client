@@ -1,7 +1,7 @@
 # propresenter-client
 
 [![CI](https://github.com/scaperothian/propresenter-client/actions/workflows/ci.yml/badge.svg)](https://github.com/scaperothian/propresenter-client/actions/workflows/ci.yml)
-[![PyPI](https://img.shields.io/pypi/v/propresenter-client.svg)](https://pypi.org/project/propresenter-client/)
+[![PyPI](https://img.shields.io/pypi/v/propresenter-client)](https://pypi.org/project/propresenter-client/)
 
 Python client for the ProPresenter REST API.
 
