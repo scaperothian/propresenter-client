@@ -2,6 +2,7 @@
 
 [![CI](https://github.com/scaperothian/propresenter-client/actions/workflows/ci.yml/badge.svg)](https://github.com/scaperothian/propresenter-client/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/propresenter-client)](https://pypi.org/project/propresenter-client/)
+[![Python versions](https://img.shields.io/pypi/pyversions/propresenter-client)](https://pypi.org/project/propresenter-client/)
 
 Python client for the ProPresenter REST API.
 
