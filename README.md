@@ -1,10 +1,13 @@
 # propresenter-client
 
+[![CI](https://github.com/scaperothian/propresenter-client/actions/workflows/ci.yml/badge.svg)](https://github.com/scaperothian/propresenter-client/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/propresenter-client.svg)](https://pypi.org/project/propresenter-client/)
+
 Python client for the ProPresenter REST API.
 
 ## Description
 
-A general-purpose Python library and CLI for interacting with ProPresenter's REST API. Provides a `ProPresenterController` class for programmatic access to any ProPresenter API endpoint, plus an interactive **presentation mode** CLI for live slide control.
+A Python library and CLI for interacting with ProPresenter's REST API. Provides a `ProPresenterController` class for programmatic access to any ProPresenter API endpoint, plus an interactive **presentation mode** CLI for live slide control.
 
 ## Features
 
@@ -21,11 +24,13 @@ pip install propresenter-client
 ## Development Setup
 
 ```bash
-# Install dependencies
-poetry install
+# Create a virtual environment and install the package with dev dependencies
+python -m venv .venv
+source .venv/bin/activate
+pip install -e ".[dev]"
 
-# Run commands within the Poetry environment
-poetry run propresenter-client --host=<your-host>
+# Run the CLI
+propresenter-client --host=<your-host>
 ```
 
 ## Quick Start
@@ -76,23 +81,42 @@ Interactive commands (no Enter required for single-key commands):
 
 ```bash
 # Run all tests
-poetry run pytest
+pytest
 
 # Run specific test file
-poetry run pytest tests/test_propresenter_controller.py -v
+pytest tests/test_propresenter_controller.py -v
 
 # Run specific test class
-poetry run pytest tests/test_propresenter_controller.py::TestProPresenterController -v
+pytest tests/test_propresenter_controller.py::TestProPresenterController -v
 
 # Run individual test
-poetry run pytest tests/test_propresenter_controller.py::TestProPresenterController::test_get_status_success -v
+pytest tests/test_propresenter_controller.py::TestProPresenterController::test_get_status_success -v
 
 # Run tests matching a pattern
-poetry run pytest -k "test_get" -v
+pytest -k "test_get" -v
 
 # Generate coverage report
-poetry run pytest --cov=propresenter_client
+pytest --cov=propresenter_client
 ```
+
+## Releasing
+
+Releases are published to [PyPI](https://pypi.org/project/propresenter-client/)
+automatically by the `Publish` GitHub Actions workflow when a version tag is
+pushed. The version number is derived from the git tag via `setuptools_scm`.
+
+```bash
+git tag v1.2.3
+git push origin v1.2.3
+```
+
+Publishing uses [PyPI Trusted Publishing (OIDC)](https://docs.pypi.org/trusted-publishers/),
+so no API tokens are stored in the repository. One-time setup on PyPI:
+
+1. Create the project's pending publisher at
+   <https://pypi.org/manage/account/publishing/>.
+2. Owner: `scaperothian`, repository: `propresenter-client`,
+   workflow: `publish.yml`, environment: `pypi`.
 
 ## Requirements
 
