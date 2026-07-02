@@ -122,9 +122,9 @@ class TestProPresenterController:
 
         assert controller.get_slide_position() == (3, 3)
 
-    @patch("builtins.input", side_effect=["n", "q"])
+    @patch("propresenter_client.main._get_command", side_effect=["n", "q"])
     @patch("builtins.print")
-    def test_interactive_prompt_next_at_last_slide(self, mock_print, mock_input, controller):
+    def test_interactive_prompt_next_at_last_slide(self, mock_print, mock_get_command, controller):
         """Test that 'n' at last slide does not move forward"""
         controller.get_status = MagicMock(return_value={"currentSlide": 2, "slideCount": 3})
         controller.next_slide = MagicMock(return_value=True)
@@ -134,9 +134,9 @@ class TestProPresenterController:
         mock_print.assert_any_call("Cannot go beyond the last slide. Prompt attempted to go beyond the last slide.")
         controller.next_slide.assert_not_called()
 
-    @patch("builtins.input", side_effect=["b", "q"])
+    @patch("propresenter_client.main._get_command", side_effect=["b", "q"])
     @patch("builtins.print")
-    def test_interactive_prompt_previous_at_first_slide(self, mock_print, mock_input, controller):
+    def test_interactive_prompt_previous_at_first_slide(self, mock_print, mock_get_command, controller):
         """Test that 'b' at first slide does not move backward"""
         controller.get_status = MagicMock(return_value={"currentSlide": 0, "slideCount": 3})
         controller.previous_slide = MagicMock(return_value=True)
@@ -146,9 +146,9 @@ class TestProPresenterController:
         mock_print.assert_any_call("Cannot go before the first slide. Prompt attempted to go beyond the first slide.")
         controller.previous_slide.assert_not_called()
 
-    @patch("builtins.input", side_effect=["5", "q"])
+    @patch("propresenter_client.main._get_command", side_effect=["5", "q"])
     @patch("builtins.print")
-    def test_interactive_prompt_number_beyond_last_slide(self, mock_print, mock_input, controller):
+    def test_interactive_prompt_number_beyond_last_slide(self, mock_print, mock_get_command, controller):
         """Test a numeric slide request beyond the last slide is blocked"""
         controller.get_status = MagicMock(return_value={"currentSlide": 1, "slideCount": 3})
         controller.go_to_slide = MagicMock(return_value=True)
